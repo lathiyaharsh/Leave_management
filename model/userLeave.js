@@ -34,7 +34,7 @@ const userLeave = db.define("userLeave",{
         allowNull:false,
     },
     attendancePercentage:{
-        type:DataTypes.DECIMAL(3,2),
+        type:DataTypes.DECIMAL(5,2),
         allowNull:false,
     }
 

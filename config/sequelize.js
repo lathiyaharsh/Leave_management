@@ -1,5 +1,5 @@
 const sequelize = require('sequelize');
-
+require('dotenv').config();
 const db = new sequelize(
     process.env.DATABASE,
     process.env.USERNAMEDB,

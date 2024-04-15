@@ -4,6 +4,7 @@ const imgPath = "/uploads/user";
 const { DataTypes } = require("sequelize");
 const db = require("../config/sequelize");
 const role = require("./role");
+const Joi = require('joi')
 
 const user = db.define(
   "user",
@@ -57,7 +58,7 @@ const user = db.define(
     department:{
         type: DataTypes.STRING,
     },
-    class:{
+    div:{
         type: DataTypes.STRING,
     },
     roleId:{
@@ -75,6 +76,22 @@ const user = db.define(
   }
 );
 
+function validateData(datas) {
+  const schema = Joi.object({
+    name: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(4).max(8).required(),
+    confirmpassword: Joi.string().min(4).max(8).required(),
+    gender: Joi.string().valid("male", "female").required(),
+    grNumber: Joi.string().allow(null).optional(),
+    phone: Joi.string().required(),
+    address: Joi.string().required(),
+    department: Joi.string().allow(null).optional(),
+    div: Joi.string().allow(null).optional(),
+  });
+  return schema.validate(datas);
+}
+
 const imageStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, "..", imgPath));
@@ -88,4 +105,4 @@ const imageStorage = multer.diskStorage({
 const uploadImgPath = multer({ storage: imageStorage }).single("image");
 user.belongsTo(role,{onDelete:"CASCADE", foreignKey:"roleId"})
 
-module.exports = { user, uploadImgPath, imgPath };
+module.exports = { user, uploadImgPath, imgPath , validateData};

@@ -279,9 +279,9 @@ module.exports.applyLeave = async (req, res) => {
       where: { userId, status },
     });
 
-    if (checkLeave <= 2) {
+    if (checkLeave.count <= 2) {
       const { startDate, endDate, leaveType, reason } = req.body;
-      const requestToId = req.body?.requestToId || 15;
+      const requestToId = req.body?.requestToId || 2;
       const dates = {
         startDate,
         endDate,

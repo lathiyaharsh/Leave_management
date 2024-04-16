@@ -4,7 +4,8 @@ const imgPath = "/uploads/user";
 const { DataTypes } = require("sequelize");
 const db = require("../config/sequelize");
 const role = require("./role");
-const Joi = require('joi')
+const Joi = require('joi');
+const validator = require('validator');
 
 const user = db.define(
   "user",
@@ -43,6 +44,9 @@ const user = db.define(
     image: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        len: [3, 80],
+      },
     },
     grNumber:{
       type: DataTypes.STRING,

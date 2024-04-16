@@ -10,6 +10,7 @@ const { userMassage } = require("../config/message");
 const leaveRequest = require("../model/leaveRequest");
 const { user, imgPath, validateData } = require("../model/user");
 const { role, roleByName, leaveDetails } = require("../config/variables");
+const sendMail = require("../utility/sendMail");
 
 // module.exports.login = async (req, res) => {
 //   try {
@@ -109,7 +110,6 @@ module.exports.login = async (req, res) => {
   }
 };
 
-
 const checkUser = async (email) => {
   try {
     const findUserDetails = await user.findOne({ where: { email } });
@@ -203,7 +203,13 @@ module.exports.registerHod = async (req, res) => {
       return res.status(400).json({ message: userMassage.error.signUperror });
 
     const getUserId = await findUserId(email);
-    await this.setLeave(req, res, getUserId);
+    await this.setLeaveHod(req, res, getUserId);
+    const emailDetails = {
+      name,
+      email,
+      password: req.body.password,
+    };
+    await sendMail(req, res, emailDetails);
     return res.status(201).json({ message: userMassage.success.signUpSuccess });
   } catch (error) {
     if (req.file) await deleteFile(req.file);
@@ -216,30 +222,144 @@ module.exports.registerHod = async (req, res) => {
   }
 };
 
-module.exports.setLeave = async (req, res, userId) => {
-    try {
-      const {
-        totalLeave,
-        availableLeave,
-        usedLeave,
-        academicYear,
-        totalWorkingDays,
-        attendancePercentage,
-      } = leaveDetails.hod;
-  
-      const studentLeave = {
-        userId,
-        totalLeave,
-        availableLeave,
-        usedLeave,
-        academicYear,
-        totalWorkingDays,
-        attendancePercentage,
-      };
-  
-      const createUserLeave = await userLeave.create(studentLeave);
-    } catch (error) {
-      console.log(error);
-      return res.status(404).json({ message: userMassage.error.genericError });
+module.exports.setLeaveHod = async (req, res, userId) => {
+  try {
+    const {
+      totalLeave,
+      availableLeave,
+      usedLeave,
+      academicYear,
+      totalWorkingDays,
+      attendancePercentage,
+    } = leaveDetails.hod;
+
+    const studentLeave = {
+      userId,
+      totalLeave,
+      availableLeave,
+      usedLeave,
+      academicYear,
+      totalWorkingDays,
+      attendancePercentage,
+    };
+
+    const createUserLeave = await userLeave.create(studentLeave);
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.registerFaculty = async (req, res) => {
+  try {
+    if (!req.body && !req.file)
+      return res.status(400).json({ message: userMassage.error.fillDetails });
+    const { error, value } = validateData(req.body);
+
+    if (error) {
+      if (req.file) await fs.unlinkSync(req.file.path);
+      return res.status(400).json({ error: error.details[0].message });
     }
-  };
+
+    const {
+      name,
+      email,
+      password,
+      confirmPassword,
+      gender,
+      grNumber,
+      phone,
+      address,
+      department,
+      div,
+    } = req.body;
+
+    if (confirmPassword !== password) {
+      await deleteFile(req.file);
+      return res
+        .status(400)
+        .json({ message: userMassage.error.passwordNotMatch });
+    }
+
+    const findUser = await checkUser(email);
+
+    if (findUser) {
+      await deleteFile(req.file);
+      return res.status(400).json({
+        message: userMassage.error.invalidEmail,
+      });
+    }
+
+    let image = "";
+    if (req.file) {
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      image = baseUrl + imgPath + "/" + req.file.filename;
+    }
+
+    const newUser = {
+      name,
+      email,
+      gender,
+      image,
+      grNumber,
+      phone,
+      address,
+      department,
+      div,
+      password: await bcrypt.hash(password, 10),
+      roleId: role.faculty,
+    };
+
+    const createUser = await user.create(newUser);
+
+    if (!createUser)
+      return res.status(400).json({ message: userMassage.error.signUperror });
+
+    const getUserId = await findUserId(email);
+    await this.setLeaveFaculty(req, res, getUserId);
+
+    const emailDetails = {
+      name,
+      email,
+      password: req.body.password,
+    };
+    await sendMail(req, res, emailDetails);
+    return res.status(201).json({ message: userMassage.success.signUpSuccess });
+  } catch (error) {
+    if (req.file) await deleteFile(req.file);
+    if (error.name === "SequelizeValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ errors });
+    }
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.setLeaveFaculty = async (req, res, userId) => {
+  try {
+    const {
+      totalLeave,
+      availableLeave,
+      usedLeave,
+      academicYear,
+      totalWorkingDays,
+      attendancePercentage,
+    } = leaveDetails.hod;
+
+    const studentLeave = {
+      userId,
+      totalLeave,
+      availableLeave,
+      usedLeave,
+      academicYear,
+      totalWorkingDays,
+      attendancePercentage,
+    };
+
+    const createUserLeave = await userLeave.create(studentLeave);
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: userMassage.error.genericError });
+  }
+};

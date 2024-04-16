@@ -2,7 +2,8 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { userMassage } = require("./message");
 const { user } = require("../model/user");
-const { roleByName } = require('./variables')
+const { roleByName } = require('./variables');
+const fs = require('fs')
 
 const verifyToken = (role) => {
     return async (req, res, next) => {
@@ -27,6 +28,7 @@ const verifyToken = (role) => {
   
           if (role) {
             if ( roleByName[userDetails.roleId ] !== role) {
+              if(req.file) await fs.unlinkSync(req.file.path)
               return res.status(403).json({ message: `Forbidden: ${role} access required` });
             }
           }

@@ -9,34 +9,8 @@ const leaveRequest = require("../model/leaveRequest");
 const { user, imgPath, validateData } = require("../model/user");
 const { role, roleByName, leaveDetails } = require("../config/variables");
 const sendMail = require("../utility/sendMail");
-const validateDates = require("../utility/validateDates");
+const moment = require("moment");
 const { where } = require("sequelize");
-
-const checkUser = async (email) => {
-  try {
-    const findUserDetails = await user.findOne({ where: { email } });
-    if (findUserDetails) return true;
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const deleteFile = async (file) => {
-  try {
-    await fs.unlinkSync(file.path);
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const findUserId = async (email) => {
-  try {
-    const findUserDetails = await user.findOne({ where: { email } });
-    if (findUserDetails) return findUserDetails.id;
-  } catch (error) {
-    console.log(error);
-  }
-};
 
 module.exports.login = async (req, res) => {
   try {
@@ -81,7 +55,33 @@ module.exports.login = async (req, res) => {
   }
 };
 
-module.exports.register = async (req, res) => {
+const checkUser = async (email) => {
+  try {
+    const findUserDetails = await user.findOne({ where: { email } });
+    if (findUserDetails) return true;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const deleteFile = async (file) => {
+  try {
+    await fs.unlinkSync(file.path);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const findUserId = async (email) => {
+  try {
+    const findUserDetails = await user.findOne({ where: { email } });
+    if (findUserDetails) return findUserDetails.id;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+module.exports.registerFaculty = async (req, res) => {
   try {
     if (!req.body && !req.file)
       return res.status(400).json({ message: userMassage.error.fillDetails });
@@ -127,6 +127,7 @@ module.exports.register = async (req, res) => {
       const baseUrl = `${req.protocol}://${req.get("host")}`;
       image = baseUrl + imgPath + "/" + req.file.filename;
     }
+    console.log(image.length);
 
     const newUser = {
       name,
@@ -139,7 +140,7 @@ module.exports.register = async (req, res) => {
       department,
       div,
       password: await bcrypt.hash(password, 10),
-      roleId: role.student,
+      roleId: role.faculty,
     };
 
     const createUser = await user.create(newUser);
@@ -148,17 +149,13 @@ module.exports.register = async (req, res) => {
       return res.status(400).json({ message: userMassage.error.signUperror });
 
     const getUserId = await findUserId(email);
-    await this.setLeave(req, res, getUserId);
+    await this.setLeaveFaculty(req, res, getUserId);
     const emailDetails = {
       name,
       email,
       password: req.body.password,
     };
-    const sendEmail = await sendMail(req, res, emailDetails);
-    if (sendEmail.valid)
-      return res
-        .status(201)
-        .json({ message: userMassage.success.signUpSuccessWithEmail });
+    await sendMail(req, res, emailDetails);
     return res.status(201).json({ message: userMassage.success.signUpSuccess });
   } catch (error) {
     if (req.file) await deleteFile(req.file);
@@ -171,32 +168,7 @@ module.exports.register = async (req, res) => {
   }
 };
 
-module.exports.profile = async (req, res) => {
-  try {
-    const { name, email, gender, image, roleId, phone, grNumber, address } =
-      req.user;
-    const userDetails = {
-      name,
-      email,
-      gender,
-      image,
-      phone,
-      grNumber,
-      address,
-      user: roleByName[roleId],
-    };
-
-    return res.status(200).json({
-      message: userMassage.success.profileRetrieved,
-      profile: userDetails,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(404).json({ message: userMassage.error.genericError });
-  }
-};
-
-module.exports.setLeave = async (req, res, userId) => {
+module.exports.setLeaveFaculty = async (req, res, userId) => {
   try {
     const {
       totalLeave,
@@ -205,7 +177,7 @@ module.exports.setLeave = async (req, res, userId) => {
       academicYear,
       totalWorkingDays,
       attendancePercentage,
-    } = leaveDetails.student;
+    } = leaveDetails.hod;
 
     const studentLeave = {
       userId,
@@ -224,98 +196,11 @@ module.exports.setLeave = async (req, res, userId) => {
   }
 };
 
-module.exports.editUser = async (req, res) => {
-  try {
-    const { id, image } = req.user;
-    if (req.file) {
-      const parsedUrl = new URL(image);
-      const imagePath = parsedUrl.pathname;
-      const fullPath = path.join(__dirname, "..", imagePath);
-      await fs.unlinkSync(fullPath);
-
-      const baseUrl = `${req.protocol}://${req.get("host")}`;
-      req.body.image = baseUrl + imgPath + "/" + req.file.filename;
-    }
-
-    const editUser = await user.update(req.body, {
-      where: { id },
-      runValidators: true,
-    });
-
-    if (!editUser)
-      return res.status(400).json({
-        message: userMassage.error.update,
-      });
-
-    return res.status(200).json({
-      message: userMassage.success.update,
-    });
-  } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json({ errors });
-    }
-    console.log(error);
-    return res.status(500).json({ message: userMassage.error.genericError });
-  }
-};
-
-module.exports.logout = async (req, res) => {
-  try {
-    res.clearCookie("jwt");
-    return res.status(200).json({
-      message: userMassage.success.logout,
-    });
-  } catch (error) {
-    return res.status(500).json({ message: userMassage.error.genericError });
-  }
-};
-
-module.exports.applyLeave = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const { startDate, endDate, leaveType, reason } = req.body;
-    const requestToId = req.body?.requestToId || 15;
-    const dates = {
-      startDate,
-      endDate,
-    };
-    const checkDates = await validateDates(dates);
-    if (!checkDates.valid) {
-      return res.status(400).json({ message: checkDates.message });
-    }
-    const leaveDetails = {
-      userId,
-      startDate,
-      endDate,
-      leaveType,
-      reason,
-      requestToId,
-    };
-
-    const createLeave = await leaveRequest.create(leaveDetails);
-    if (!createLeave)
-      return res.status(400).json({ message: userMassage.error.leaveRequest });
-
-    return res.status(201).json({ message: userMassage.success.leaveRequest });
-  } catch (error) {
-    if (error.name === "SequelizeValidationError") {
-      const errors = Object.values(error.errors).map((err) => err.message);
-      return res.status(400).json({ errors });
-    }
-    console.log(error);
-    return res.status(500).json({ message: userMassage.error.genericError });
-  }
-};
-
 module.exports.leaveStatus = async (req, res) => {
   try {
     const userId = req.user.id;
 
     const leaveStatus = await leaveRequest.findAll({
-      where: { userId },
-      attributes: { exclude: ["updatedAt"] },
       order: [["createdAt", "DESC"]],
     });
     return res
@@ -327,16 +212,68 @@ module.exports.leaveStatus = async (req, res) => {
   }
 };
 
-module.exports.leaveBalance = async (req, res) => {
+module.exports.leaveApproval = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const leaveBalance = await userLeave.findOne({
-      where: { userId },
-      attributes: { exclude: ["id", "createdAt", "updatedAt"] },
-    });
-    return res
-      .status(200)
-      .json({ leaveBalance, message: userMassage.success.leaveBalance });
+    const id = req.params.id;
+
+    const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
+    
+    if (checkLeaveStatus.status == "Pending") {
+      const leaveApproval = await leaveRequest.update(
+        { status: "Approved" },
+        { where: { id }, returning: true }
+      );
+      if (leaveApproval) {
+        const leaveDetails = await leaveRequest.findOne({ where: { id } });
+        const { startDate, endDate , userId } = leaveDetails;
+        const start = moment(startDate, "YYYY-MM-DD");
+        const end = moment(endDate, "YYYY-MM-DD");
+        const leaveDays = end.diff(start, "days") + 1;
+        const leaveData = await userLeave.findOne({ where: { userId } });
+        const availableLeave = leaveData.availableLeave - leaveDays;
+        const usedLeave = leaveData.usedLeave + leaveDays;
+        const remainingDays = leaveData.totalWorkingDays - usedLeave;
+        const attendancePercentage = (
+          (remainingDays * 100) /
+          leaveData.totalWorkingDays
+        ).toFixed(2);
+
+        const updateLeaveDetails = {
+          availableLeave,
+          usedLeave,
+          attendancePercentage,
+        };
+
+        const updateLeave = await userLeave.update(updateLeaveDetails, {
+          where: { userId },
+        });
+        if (updateLeave)
+          return res
+            .status(200)
+            .json({ message: userMassage.success.leaveApproval });
+      }
+    }
+
+    return res.status(200).json({ message: userMassage.error.leaveStatus });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.leaveReject = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
+
+    if (checkLeaveStatus.status == "Pending") {
+        const leaveReject = await leaveRequest.update(
+            { status: "Rejected" },
+            { where: { id }, returning: true }
+          );
+          return res.status(200).json({ message: userMassage.success.leaveReject });
+    }
+    return res.status(200).json({ message: userMassage.error.leaveStatus });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });

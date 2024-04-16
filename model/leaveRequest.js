@@ -35,6 +35,7 @@ const leaveRequest = db.define("leaveRequest",{
     },
     status:{
         type:DataTypes.ENUM("Pending","Rejected","Approved"),
+        defaultValue: 'Pending',
         allowNull:false
     }
 });

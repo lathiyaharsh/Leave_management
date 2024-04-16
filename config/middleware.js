@@ -2,32 +2,53 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { userMassage } = require("./message");
 const { user } = require("../model/user");
+const { roleByName } = require('./variables')
 
-const verifyToken = async (req, res, next) => {
-  const token = req.cookies["jwt"];
-  if (!token)
-    return res.status(403).json({ message: userMassage.error.tokenMissing });
-
-  jwt.verify(token, process.env.SECRETKEY, async (err, decoded) => {
-    try {
-      if (err)
-        return res
-          .status(401)
-          .json({ message: userMassage.error.unauthorized });
-      
+const verifyToken = (role) => {
+    return async (req, res, next) => {
+      const token = req.cookies["jwt"];
+      if (!token)
+        return res.status(403).json({ message: userMassage.error.tokenMissing });
+  
+      jwt.verify(token, process.env.SECRETKEY, async (err, decoded) => {
+        try {
+          if (err)
+            return res
+              .status(401)
+              .json({ message: userMassage.error.unauthorized });
           
-      const userDetails  = await getUser(decoded.userDetails.id);  
-      req.user = userDetails;
-      next();
-    } catch (error) {}
-  });
-};
+          const userDetails = await getUser(decoded.userDetails);
 
-const getUser = async (id) => {
+          if (userDetails == null)
+            return res
+              .status(401)
+              .json({ message: userMassage.error.unauthorized });
+          req.user = userDetails;
+  
+          if (role) {
+            if ( roleByName[userDetails.roleId ] !== role) {
+              return res.status(403).json({ message: `Forbidden: ${role} access required` });
+            }
+          }
+  
+          next();
+        } catch (error) {
+            console.log(error);
+          return res.status(401).json({ message: userMassage.error.unauthorized });
+        }
+      });
+    };
+  };
+  
+
+const getUser = async (data) => {
   try {
-    const getUserDetails = await user.findByPk(id, {
+    const { email , name , id } = data;
+    const getUserDetails = await user.findOne({
+      where: { email , name , id },
       attributes: { exclude: ["password"] },
     });
+
     return getUserDetails;
   } catch (error) {
     console.log(error);

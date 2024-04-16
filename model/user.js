@@ -81,7 +81,7 @@ function validateData(datas) {
     name: Joi.string().required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(4).max(8).required(),
-    confirmpassword: Joi.string().min(4).max(8).required(),
+    confirmPassword: Joi.string().min(4).max(8).required(),
     gender: Joi.string().valid("male", "female").required(),
     grNumber: Joi.string().allow(null).optional(),
     phone: Joi.string().required(),

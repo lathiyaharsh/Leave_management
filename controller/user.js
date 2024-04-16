@@ -1,12 +1,13 @@
-const { user, imgPath, validateData } = require("../model/user");
-const userLeave = require("../model/userLeave");
-const leaveRequest = require("../model/leaveReqest");
-const { role, roleByName , leaveDetails} = require("../config/variables");
-const { userMassage } = require("../config/message");
 const fs = require("fs");
+require("dotenv").config();
 const path = require("path");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const userLeave = require("../model/userLeave");
+const { userMassage } = require("../config/message");
+const leaveRequest = require("../model/leaveRequest");
+const { user, imgPath, validateData } = require("../model/user");
+const { role, roleByName, leaveDetails } = require("../config/variables");
 
 const checkUser = async (email) => {
   try {
@@ -17,7 +18,7 @@ const checkUser = async (email) => {
   }
 };
 
-const deletefile = async (file) => {
+const deleteFile = async (file) => {
   try {
     await fs.unlinkSync(file.path);
   } catch (error) {
@@ -25,7 +26,7 @@ const deletefile = async (file) => {
   }
 };
 
-const findUserid = async (email) => {
+const findUserId = async (email) => {
   try {
     const findUserDetails = await user.findOne({ where: { email } });
     if (findUserDetails) return findUserDetails.id;
@@ -50,7 +51,7 @@ module.exports.register = async (req, res) => {
       name,
       email,
       password,
-      confirmpassword,
+      confirmPassword,
       gender,
       grNumber,
       phone,
@@ -59,8 +60,8 @@ module.exports.register = async (req, res) => {
       div,
     } = req.body;
 
-    if (confirmpassword !== password) {
-      await deletefile(req.file);
+    if (confirmPassword !== password) {
+      await deleteFile(req.file);
       return res
         .status(400)
         .json({ message: userMassage.error.passwordNotMatch });
@@ -69,7 +70,7 @@ module.exports.register = async (req, res) => {
     const findUser = await checkUser(email);
 
     if (findUser) {
-      await deletefile(req.file);
+      await deleteFile(req.file);
       return res.status(400).json({
         message: userMassage.error.invalidEmail,
       });
@@ -100,11 +101,11 @@ module.exports.register = async (req, res) => {
     if (!createUser)
       return res.status(400).json({ message: userMassage.error.signUperror });
 
-    const getUserId = await findUserid(email);
+    const getUserId = await findUserId(email);
     await this.setLeave(req, res, getUserId);
     return res.status(201).json({ message: userMassage.success.signUpSuccess });
   } catch (error) {
-    if (req.file) await deletefile(req.file);
+    if (req.file) await deleteFile(req.file);
     if (error.name === "SequelizeValidationError") {
       const errors = Object.values(error.errors).map((err) => err.message);
       return res.status(400).json({ errors });
@@ -159,12 +160,16 @@ module.exports.login = async (req, res) => {
 
 module.exports.profile = async (req, res) => {
   try {
-    const { name, email, gender, image, roleId } = req.user;
+    const { name, email, gender, image, roleId, phone, grNumber, address } =
+      req.user;
     const userDetails = {
       name,
       email,
       gender,
       image,
+      phone,
+      grNumber,
+      address,
       user: roleByName[roleId],
     };
 
@@ -180,9 +185,7 @@ module.exports.profile = async (req, res) => {
 
 module.exports.setLeave = async (req, res, userId) => {
   try {
-    
-
-    const{
+    const {
       totalLeave,
       availableLeave,
       usedLeave,
@@ -202,8 +205,55 @@ module.exports.setLeave = async (req, res, userId) => {
     };
 
     const createUserLeave = await userLeave.create(studentLeave);
-
   } catch (error) {
     console.log(error);
+    return res.status(404).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.editUser = async (req, res) => {
+  try {
+    const { id, image } = req.user;
+    if (req.file) {
+      const parsedUrl = new URL(image);
+      const imagePath = parsedUrl.pathname;
+      const fullPath = path.join(__dirname, "..", imagePath);
+      await fs.unlinkSync(fullPath);
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      req.body.image = baseUrl + imgPath + "/" + req.file.filename;
+    }
+
+    const editUser = await user.update(req.body, {
+      where: { id },
+      runValidators: true,
+    });
+
+    if (!editUser)
+      return res.status(400).json({
+        message: userMassage.error.update,
+      });
+
+    return res.status(200).json({
+      message: userMassage.success.update,
+    });
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ errors });
+    }
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.logout = async (req, res) => {
+  try {
+    res.clearCookie("jwt");
+    return res.status(200).json({
+      message: userMassage.success.logout,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: userMassage.error.genericError });
   }
 };

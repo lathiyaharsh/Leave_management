@@ -4,7 +4,9 @@ module.exports = {
         signUpSuccess: "The user has successfully signed up.",
         loginSuccess: "The user has been successfully logged in.",
         profileRetrieved: "The user profile has been successfully retrieved.",
-        delete:"User and associated books deleted successfully",
+        delete:"User and associated Data deleted successfully",
+        update:"User Data updated successfully",
+        logout:"Logged out successfully",
       },
       error: {
         unauthorized: "Unauthorized - invalid token",
@@ -21,6 +23,7 @@ module.exports = {
         uploadImage: "Image upload unsuccessful",
         password: "Your password should be between 6-20 characters!",
         delete: "The details of the user were not deleted.",
+        update:"User Data not updated successfully",
       },
     },
   };

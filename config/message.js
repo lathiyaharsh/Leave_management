@@ -34,7 +34,8 @@ module.exports = {
       delete: "The details of the user were not deleted.",
       update: "User Data not updated successfully",
       leaveRequest: "Leave request not send successfully",
-      leaveStatus:"Leave already approved or rejected"
+      leaveStatus:"Leave already approved or rejected",
+      leaveRequestLimit:"already request for leave 2 times wait for leave approval",
     },
   },
 };

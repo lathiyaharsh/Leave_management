@@ -274,31 +274,44 @@ module.exports.logout = async (req, res) => {
 module.exports.applyLeave = async (req, res) => {
   try {
     const userId = req.user.id;
+    const status = "Pending";
+    const checkLeave = await leaveRequest.findAndCountAll({
+      where: { userId, status },
+    });
 
-    const { startDate, endDate, leaveType, reason } = req.body;
-    const requestToId = req.body?.requestToId || 15;
-    const dates = {
-      startDate,
-      endDate,
-    };
-    const checkDates = await validateDates(dates);
-    if (!checkDates.valid) {
-      return res.status(400).json({ message: checkDates.message });
+    if (checkLeave <= 2) {
+      const { startDate, endDate, leaveType, reason } = req.body;
+      const requestToId = req.body?.requestToId || 15;
+      const dates = {
+        startDate,
+        endDate,
+      };
+      const checkDates = await validateDates(dates);
+      if (!checkDates.valid) {
+        return res.status(400).json({ message: checkDates.message });
+      }
+      const leaveDetails = {
+        userId,
+        startDate,
+        endDate,
+        leaveType,
+        reason,
+        requestToId,
+      };
+
+      const createLeave = await leaveRequest.create(leaveDetails);
+      if (!createLeave)
+        return res
+          .status(400)
+          .json({ message: userMassage.error.leaveRequest });
+
+      return res
+        .status(201)
+        .json({ message: userMassage.success.leaveRequest });
     }
-    const leaveDetails = {
-      userId,
-      startDate,
-      endDate,
-      leaveType,
-      reason,
-      requestToId,
-    };
-
-    const createLeave = await leaveRequest.create(leaveDetails);
-    if (!createLeave)
-      return res.status(400).json({ message: userMassage.error.leaveRequest });
-
-    return res.status(201).json({ message: userMassage.success.leaveRequest });
+    return res
+      .status(201)
+      .json({ message: userMassage.error.leaveRequestLimit });
   } catch (error) {
     if (error.name === "SequelizeValidationError") {
       const errors = Object.values(error.errors).map((err) => err.message);

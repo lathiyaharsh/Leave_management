@@ -607,6 +607,18 @@ module.exports.leaveReport = async (req, res) => {
 module.exports.removeUser = async (req, res) => {
   try {
     const { id } = req.params;
+
+    const deleteImage = await user.findByPk(id);
+    const { image } = deleteImage;
+    const parsedUrl = new URL(image);
+    const imagePath = parsedUrl.pathname;
+    const fullPath = path.join(__dirname, "..", imagePath);
+    try {
+      await fs.unlinkSync(fullPath);
+    } catch (error) {
+      console.log(error);
+    }
+
     const removeUser = await user.destroy({ where: { id } });
 
     if (!removeUser)

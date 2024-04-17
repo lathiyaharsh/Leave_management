@@ -173,8 +173,17 @@ module.exports.register = async (req, res) => {
 
 module.exports.profile = async (req, res) => {
   try {
-    const { name, email, gender, image, roleId, phone, grNumber, address ,div} =
-      req.user;
+    const {
+      name,
+      email,
+      gender,
+      image,
+      roleId,
+      phone,
+      grNumber,
+      address,
+      div,
+    } = req.user;
     const userDetails = {
       name,
       email,
@@ -247,7 +256,6 @@ module.exports.editUser = async (req, res) => {
       const baseUrl = `${req.protocol}://${req.get("host")}`;
       req.body.image = baseUrl + imgPath + "/" + req.file.filename;
     }
-
 
     const editUser = await user.update(req.body, {
       where: { id },
@@ -342,11 +350,13 @@ module.exports.leaveStatus = async (req, res) => {
       where: { userId },
       attributes: { exclude: ["updatedAt"] },
       order: [["createdAt", "DESC"]],
-      include: [{
-        model: user,       
-        as:"requestedTo",      
-        attributes: [ 'name', 'email']
-    }]
+      include: [
+        {
+          model: user,
+          as: "requestedTo",
+          attributes: ["name", "email"],
+        },
+      ],
     });
     return res
       .status(200)

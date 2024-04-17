@@ -237,119 +237,139 @@ module.exports.editStudent = async (req, res) => {
 };
 
 module.exports.leaveStatus = async (req, res) => {
-    try {
-  
-      const leaveStatus = await leaveRequest.findAll({
-        order: [["createdAt", "DESC"]],
-        include: [{
-            model: user,
-            as: "requestedBy", // Use the correct alias for requestedBy association
-            attributes: ['id', 'name', 'email']
-          }, {
-            model: user,
-            as: "requestedTo", // Use the correct alias for requestedTo association
-            attributes: ['id', 'name', 'email']
-          }]
-      });
-      return res
-        .status(200)
-        .json({ leaveStatus, message: userMassage.success.leaveStatus });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: userMassage.error.genericError });
-    }
-  };
-  
-module.exports.leaveApproval = async (req, res) => {
-    try {
-      const id = req.params.id;
-  
-      const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
-      
-      if (checkLeaveStatus.status == "Pending") {
-        const leaveApproval = await leaveRequest.update(
-          { status: "Approved" },
-          { where: { id }, returning: true }
-        );
-        if (leaveApproval) {
-          const leaveDetails = await leaveRequest.findOne({ where: { id } });
-          const { startDate, endDate , userId } = leaveDetails;
-          const start = moment(startDate, "YYYY-MM-DD");
-          const end = moment(endDate, "YYYY-MM-DD");
-          const leaveDays = end.diff(start, "days") + 1;
-          const leaveData = await userLeave.findOne({ where: { userId } });
-          const availableLeave = leaveData.availableLeave - leaveDays;
-          const usedLeave = leaveData.usedLeave + leaveDays;
-          const remainingDays = leaveData.totalWorkingDays - usedLeave;
-          const attendancePercentage = (
-            (remainingDays * 100) /
-            leaveData.totalWorkingDays
-          ).toFixed(2);
-  
-          const updateLeaveDetails = {
-            availableLeave,
-            usedLeave,
-            attendancePercentage,
-          };
-  
-          const updateLeave = await userLeave.update(updateLeaveDetails, {
-            where: { userId },
-          });
-          if (updateLeave)
-            return res
-              .status(200)
-              .json({ message: userMassage.success.leaveApproval });
-        }
-      }
-  
-      return res.status(200).json({ message: userMassage.error.leaveStatus });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: userMassage.error.genericError });
-    }
+  try {
+    const requestToId = req.user.id;
+    const leaveStatus = await leaveRequest.findAll({
+      where: { requestToId },
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: user,
+          as: "requestedBy",
+          attributes: ["id", "name", "email", "div"],
+        },
+      ],
+    });
+    return res
+      .status(200)
+      .json({ leaveStatus, message: userMassage.success.leaveStatus });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
 };
-  
-module.exports.leaveReject = async (req, res) => {
-    try {
-      const id = req.params.id;
-      const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
-  
-      if (checkLeaveStatus.status == "Pending") {
-          const leaveReject = await leaveRequest.update(
-              { status: "Rejected" },
-              { where: { id }, returning: true }
-            );
-            return res.status(200).json({ message: userMassage.success.leaveReject });
+
+module.exports.leaveApproval = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const userId = req.user.id;
+    const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
+    const { status, requestToId } = checkLeaveStatus;
+    if (requestToId != userId)
+      return res.status(400).json({
+        message: userMassage.error.leaveStatusError,
+      });
+
+    if (status == "Pending") {
+      const leaveApproval = await leaveRequest.update(
+        { status: "Approved" },
+        { where: { id }, returning: true }
+      );
+      if (leaveApproval) {
+        const leaveDetails = await leaveRequest.findOne({ where: { id } });
+        const { startDate, endDate, userId } = leaveDetails;
+        const start = moment(startDate, "YYYY-MM-DD");
+        const end = moment(endDate, "YYYY-MM-DD");
+        const leaveDays = start.isSame(end, "day")
+          ? 0.5
+          : end.diff(start, "days") + 1;
+        const leaveData = await userLeave.findOne({ where: { userId } });
+        const availableLeave = leaveData.availableLeave - leaveDays;
+        const usedLeave = Number(leaveData.usedLeave) + Number(leaveDays);
+        const remainingDays = leaveData.totalWorkingDays - usedLeave;
+        const attendancePercentage = (
+          (remainingDays * 100) /
+          leaveData.totalWorkingDays
+        ).toFixed(2);
+
+        const updateLeaveDetails = {
+          availableLeave,
+          usedLeave,
+          attendancePercentage,
+        };
+
+        const updateLeave = await userLeave.update(updateLeaveDetails, {
+          where: { userId },
+        });
+        if (updateLeave)
+          return res
+            .status(200)
+            .json({ message: userMassage.success.leaveApproval });
       }
-      return res.status(200).json({ message: userMassage.error.leaveStatus });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ message: userMassage.error.genericError });
     }
+
+    return res.status(200).json({ message: userMassage.error.leaveStatus });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.leaveReject = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const userId = req.user.id;
+    const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
+    const { status, requestToId } = checkLeaveStatus;
+    if (requestToId != userId)
+      return res.status(400).json({
+        message: userMassage.error.leaveStatusError,
+      });
+    if (status == "Pending") {
+      const leaveReject = await leaveRequest.update(
+        { status: "Rejected" },
+        { where: { id }, returning: true }
+      );
+      return res.status(200).json({ message: userMassage.success.leaveReject });
+    }
+    return res.status(200).json({ message: userMassage.error.leaveStatus });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
 };
 
 module.exports.profile = async (req, res) => {
-    try {
-      const { name, email, gender, image, roleId, phone, department, address , div} =
-        req.user;
-      const userDetails = {
-        name,
-        email,
-        gender,
-        image,
-        phone,
-        department,
-        address,
-        div,
-        user: roleByName[roleId],
-      };
-  
-      return res.status(200).json({
-        message: userMassage.success.profileRetrieved,
-        profile: userDetails,
-      });
-    } catch (error) {
-      console.log(error);
-      return res.status(404).json({ message: userMassage.error.genericError });
-    }
-  };
+  try {
+    const {
+      name,
+      email,
+      gender,
+      image,
+      roleId,
+      phone,
+      department,
+      address,
+      div,
+    } = req.user;
+    const userDetails = {
+      name,
+      email,
+      gender,
+      image,
+      phone,
+      department,
+      address,
+      div,
+      user: roleByName[roleId],
+    };
+
+    return res.status(200).json({
+      message: userMassage.success.profileRetrieved,
+      profile: userDetails,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: userMassage.error.genericError });
+  }
+};

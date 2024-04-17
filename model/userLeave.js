@@ -14,7 +14,7 @@ const userLeave = db.define("userLeave",{
         allowNull:false,
     },
     totalLeave:{
-        type:DataTypes.INTEGER,
+        type:DataTypes.DECIMAL(4,2),
         allowNull:false,
     },
     availableLeave:{
@@ -30,7 +30,7 @@ const userLeave = db.define("userLeave",{
         allowNull:false,
     },
     totalWorkingDays:{
-        type:DataTypes.INTEGER,
+        type:DataTypes.DECIMAL(5,2),
         allowNull:false,
     },
     attendancePercentage:{

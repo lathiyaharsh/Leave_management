@@ -342,6 +342,11 @@ module.exports.leaveStatus = async (req, res) => {
       where: { userId },
       attributes: { exclude: ["updatedAt"] },
       order: [["createdAt", "DESC"]],
+      include: [{
+        model: user,       
+        as:"requestedTo",      
+        attributes: [ 'name', 'email']
+    }]
     });
     return res
       .status(200)

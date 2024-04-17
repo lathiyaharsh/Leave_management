@@ -57,10 +57,14 @@ module.exports.login = async (req, res) => {
 
 module.exports.leaveStatus = async (req, res) => {
   try {
-    const userId = req.user.id;
 
     const leaveStatus = await leaveRequest.findAll({
       order: [["createdAt", "DESC"]],
+      include: [{
+          model: user,       
+          as:"requestedBy",      
+          attributes: ['id', 'name', 'email']
+      }]
     });
     return res
       .status(200)

@@ -18,11 +18,11 @@ const userLeave = db.define("userLeave",{
         allowNull:false,
     },
     availableLeave:{
-        type:DataTypes.INTEGER,
+        type:DataTypes.DECIMAL(4,2),
         allowNull:false,
     },
     usedLeave:{
-        type:DataTypes.INTEGER,
+        type:DataTypes.DECIMAL(4,2),
         allowNull:false,
     },
     academicYear:{

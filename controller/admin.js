@@ -200,7 +200,7 @@ module.exports.registerHod = async (req, res) => {
     const createUser = await user.create(newUser);
 
     if (!createUser)
-      return res.status(400).json({ message: userMassage.error.signUperror });
+      return res.status(400).json({ message: userMassage.error.signUpError });
 
     const getUserId = await findUserId(email);
     await this.setLeaveHod(req, res, getUserId);
@@ -247,6 +247,60 @@ module.exports.setLeaveHod = async (req, res, userId) => {
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.editHod = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const hodDetails = await user.findByPk(id);
+    const { image, email } = hodDetails;
+
+    if (hodDetails.roleId != role.hod)
+      return res.status(400).json({
+        message: userMassage.error.hodUpdateRole,
+      });
+
+    if (email != req.body.email) {
+      const findUser = await checkUser(req.body.email);
+
+      if (findUser) {
+        if (req.file) await deleteFile(req.file);
+        return res.status(400).json({
+          message: userMassage.error.invalidEmail,
+        });
+      }
+    }
+    if (req.file) {
+      const parsedUrl = new URL(image);
+      const imagePath = parsedUrl.pathname;
+      const fullPath = path.join(__dirname, "..", imagePath);
+      await fs.unlinkSync(fullPath);
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      req.body.image = baseUrl + imgPath + "/" + req.file.filename;
+    }
+
+    const editUser = await user.update(req.body, {
+      where: { id },
+      runValidators: true,
+    });
+
+    if (!editUser)
+      return res.status(400).json({
+        message: userMassage.error.update,
+      });
+
+    return res.status(200).json({
+      message: userMassage.success.update,
+    });
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ errors });
+    }
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
 
@@ -313,7 +367,7 @@ module.exports.registerFaculty = async (req, res) => {
     const createUser = await user.create(newUser);
 
     if (!createUser)
-      return res.status(400).json({ message: userMassage.error.signUperror });
+      return res.status(400).json({ message: userMassage.error.signUpError });
 
     const getUserId = await findUserId(email);
     await this.setLeaveFaculty(req, res, getUserId);
@@ -364,6 +418,60 @@ module.exports.setLeaveFaculty = async (req, res, userId) => {
   }
 };
 
+module.exports.editFaculty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const facultyDetails = await user.findByPk(id);
+    const { image, email } = hodDetails;
+
+    if (facultyDetails.roleId != role.faculty)
+      return res.status(400).json({
+        message: userMassage.error.facultyUpdateRole,
+      });
+
+    if (email != req.body.email) {
+      const findUser = await checkUser(req.body.email);
+
+      if (findUser) {
+        if (req.file) await deleteFile(req.file);
+        return res.status(400).json({
+          message: userMassage.error.invalidEmail,
+        });
+      }
+    }
+    if (req.file) {
+      const parsedUrl = new URL(image);
+      const imagePath = parsedUrl.pathname;
+      const fullPath = path.join(__dirname, "..", imagePath);
+      await fs.unlinkSync(fullPath);
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      req.body.image = baseUrl + imgPath + "/" + req.file.filename;
+    }
+
+    const editUser = await user.update(req.body, {
+      where: { id },
+      runValidators: true,
+    });
+
+    if (!editUser)
+      return res.status(400).json({
+        message: userMassage.error.update,
+      });
+
+    return res.status(200).json({
+      message: userMassage.success.update,
+    });
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ errors });
+    }
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
 module.exports.logout = async (req, res) => {
   try {
     res.clearCookie("jwt");
@@ -374,3 +482,4 @@ module.exports.logout = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
+

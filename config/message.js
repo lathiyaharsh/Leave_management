@@ -16,6 +16,7 @@ module.exports = {
       leaveBalance: "Leave Balance retrieved successfully",
       leaveApproval: "Leave approved successfully",
       leaveReject: "Leave rejected successfully",
+      studentList: "The list has been retrieved successfully.",
     },
     error: {
       unauthorized: "Unauthorized - invalid token",
@@ -23,7 +24,7 @@ module.exports = {
       invalidCredentials: "Invalid credentials",
       userNotFound: "User not found",
       genericError: "An error occurred. please try again later.",
-      signUperror: "The user sign-up process was unsuccessful.",
+      signUpError: "The user sign-up process was unsuccessful.",
       passwordNotMatch: "The password and confirm password do not match.",
       invalidEmail:
         "There is already a user registered with this email address.",
@@ -36,6 +37,10 @@ module.exports = {
       leaveRequest: "Leave request not send successfully",
       leaveStatus:"Leave already approved or rejected",
       leaveRequestLimit:"already request for leave 2 times wait for leave approval",
+      studentList: "The student list has not retrieved successfully.",
+      studentUpdateRole:"This user is not a student",
+      hodUpdateRole:"This user is not a hod",
+      facultyUpdateRole:"This user is not a faculty",
     },
   },
 };

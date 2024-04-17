@@ -26,10 +26,17 @@ const verifyToken = (role) => {
               .json({ message: userMassage.error.unauthorized });
           req.user = userDetails;
   
-          if (role) {
-            if ( roleByName[userDetails.roleId ] !== role) {
+          // if (role) {
+          //   if ( roleByName[userDetails.roleId ] !== role) {
+          //     if(req.file) await fs.unlinkSync(req.file.path)
+          //     return res.status(403).json({ message: `Forbidden: ${role} access required` });
+          //   }
+          // }
+          if (role && role.length > 0) {
+            userRole =roleByName[userDetails.roleId];
+            if (!role.includes(userRole)) {
               if(req.file) await fs.unlinkSync(req.file.path)
-              return res.status(403).json({ message: `Forbidden: ${role} access required` });
+              return res.status(403).json({ message: `Forbidden: ${role.join(' or ')} access required` });
             }
           }
   

@@ -11,15 +11,13 @@ const {
   leaveBalance,
 } = require("../controller/user");
 const { uploadImgPath } = require("../model/user");
-const jwtAuth = require("../config/middleware");
 const verifyToken = require("../config/middleware");
 
 routes.post("/login", login);
 routes.post("/register", uploadImgPath, register);
 
-routes.put("/editUser", uploadImgPath, jwtAuth, editUser);
-
-routes.use(verifyToken("student"));
+routes.use(verifyToken(["student"]));
+routes.put("/editUser", uploadImgPath, editUser);
 routes.get("/profile", profile);
 routes.get("/logout", logout);
 routes.post("/applyLeave", applyLeave);

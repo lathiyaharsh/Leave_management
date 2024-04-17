@@ -145,7 +145,7 @@ module.exports.register = async (req, res) => {
     const createUser = await user.create(newUser);
 
     if (!createUser)
-      return res.status(400).json({ message: userMassage.error.signUperror });
+      return res.status(400).json({ message: userMassage.error.signUpError });
 
     const getUserId = await findUserId(email);
     await this.setLeave(req, res, getUserId);
@@ -173,7 +173,7 @@ module.exports.register = async (req, res) => {
 
 module.exports.profile = async (req, res) => {
   try {
-    const { name, email, gender, image, roleId, phone, grNumber, address } =
+    const { name, email, gender, image, roleId, phone, grNumber, address ,div} =
       req.user;
     const userDetails = {
       name,
@@ -183,6 +183,7 @@ module.exports.profile = async (req, res) => {
       phone,
       grNumber,
       address,
+      div,
       user: roleByName[roleId],
     };
 
@@ -226,7 +227,17 @@ module.exports.setLeave = async (req, res, userId) => {
 
 module.exports.editUser = async (req, res) => {
   try {
-    const { id, image } = req.user;
+    const { id, image, email } = req.user;
+    if (email != req.body.email) {
+      const findUser = await checkUser(req.body.email);
+
+      if (findUser) {
+        await deleteFile(req.file);
+        return res.status(400).json({
+          message: userMassage.error.invalidEmail,
+        });
+      }
+    }
     if (req.file) {
       const parsedUrl = new URL(image);
       const imagePath = parsedUrl.pathname;
@@ -236,6 +247,7 @@ module.exports.editUser = async (req, res) => {
       const baseUrl = `${req.protocol}://${req.get("host")}`;
       req.body.image = baseUrl + imgPath + "/" + req.file.filename;
     }
+
 
     const editUser = await user.update(req.body, {
       where: { id },

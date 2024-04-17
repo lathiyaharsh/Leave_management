@@ -149,3 +149,29 @@ module.exports.logout = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
+
+module.exports.profile = async (req, res) => {
+  try {
+    const { name, email, gender, image, roleId, phone, department, address , div} =
+      req.user;
+    const userDetails = {
+      name,
+      email,
+      gender,
+      image,
+      phone,
+      department,
+      address,
+      div,
+      user: roleByName[roleId],
+    };
+
+    return res.status(200).json({
+      message: userMassage.success.profileRetrieved,
+      profile: userDetails,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(404).json({ message: userMassage.error.genericError });
+  }
+};

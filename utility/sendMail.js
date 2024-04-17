@@ -27,7 +27,7 @@ const sendMail = async (req, res, emailDetails) => {
     const mail = await transporter.sendMail({
       from: "harshlathiya91@gmail.com", // sender address
       to: `${email}`, // list of receivers
-      subject: "Contact", // Subject line
+      subject: "Welcome To LMS", // Subject line
       text: "Hello Manager ", // plain text body
       html: htmlToSend, // html body
     });

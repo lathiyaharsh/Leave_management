@@ -259,6 +259,33 @@ module.exports.leaveStatus = async (req, res) => {
   }
 };
 
+module.exports.allLeaveStatus = async (req, res) => {
+    try {
+      const leaveStatus = await leaveRequest.findAll({
+        order: [["createdAt", "DESC"]],
+        include: [
+          {
+            model: user,
+            as: "requestedBy", // Use the correct alias for requestedBy association
+            attributes: ["id", "name", "email"],
+          },
+          {
+            model: user,
+            as: "requestedTo", // Use the correct alias for requestedTo association
+            attributes: ["id", "name", "email"],
+          },
+        ],
+      });
+      return res
+        .status(200)
+        .json({ leaveStatus, message: userMassage.success.leaveStatus });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ message: userMassage.error.genericError });
+    }
+  };
+  
+
 module.exports.leaveApproval = async (req, res) => {
   try {
     const id = req.params.id;

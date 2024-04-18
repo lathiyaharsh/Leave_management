@@ -44,11 +44,14 @@
         <div class="message">
             <p>Dear {{name}},</p>
             <p>I hope this email finds you well.</p>
-            <p>This is a gentle reminder regarding your pending leave request. Our records indicate that you have a leave request awaiting approval. Please take a moment to review your request and ensure that all necessary details are provided.</p>
+            <p>This is a gentle reminder regarding pending leave requests. Our records indicate that you have a leave request awaiting approval. Please take a moment to review your request and ensure that all necessary details are provided.</p>
         </div>
         <div class="details">
             <p><strong>Leave Details:</strong></p>
             <ul>
+                <li><strong>Leave Requested By:</strong> {{requestedByName}}</li>
+                <li><strong>User Id:</strong> {{requestedById}}</li>
+                <li><strong>User:</strong> {{requestedBy}}</li>
                 <li><strong>Leave Type:</strong> {{leaveType}}</li>
                 <li><strong>Start Date:</strong> {{startDate}}</li>
                 <li><strong>End Date:</strong> {{endDate}}</li>

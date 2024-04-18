@@ -1,7 +1,7 @@
 const fs = require("fs");
 require("dotenv").config();
 const path = require("path");
-const { Op , Sequelize } = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
 const leaveRequest = require("../model/leaveRequest");
@@ -240,17 +240,20 @@ module.exports.leaveStatus = async (req, res) => {
   try {
     const requestToId = req.user.id;
     const leaveStatus = await leaveRequest.findAll({
-      attributes: { 
+      attributes: {
         include: [
-          [Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`), 'leaveDifference']
-        ]
+          [
+            Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`),
+            "leaveDifference",
+          ],
+        ],
       },
       where: { requestToId },
       order: [["createdAt", "DESC"]],
       include: [
         {
           model: userLeave,
-          attributes: ["usedLeave","availableLeave"],
+          attributes: ["usedLeave", "availableLeave"],
         },
         {
           model: user,
@@ -270,6 +273,34 @@ module.exports.leaveStatus = async (req, res) => {
 
 module.exports.allLeaveStatus = async (req, res) => {
   try {
+    const { search } = req.query;
+    if (search && search.trim()) {
+      const searchResults = await leaveRequest.findAll({
+        where: {
+          status: {
+            [Op.like]: `%${search}%`,
+          },
+        },
+        order: [["createdAt", "DESC"]],
+        include: [
+          {
+            model: user,
+            as: "requestedBy", // Use the correct alias for requestedBy association
+            attributes: ["id", "name", "email"],
+          },
+          {
+            model: user,
+            as: "requestedTo", // Use the correct alias for requestedTo association
+            attributes: ["id", "name", "email"],
+          },
+        ],
+      });
+
+      return res.status(200).json({
+        message: userMassage.success.studentList,
+        searchResults,
+      });
+    }
     const leaveStatus = await leaveRequest.findAll({
       order: [["createdAt", "DESC"]],
       include: [

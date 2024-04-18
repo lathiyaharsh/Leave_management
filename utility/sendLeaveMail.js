@@ -21,6 +21,7 @@ const findUser = async (requestToId) => {
   });
   return userDetails;
 };
+
 const sendReminderEmail = async (PendingLeaves) => {
   try {
     for (const leave of PendingLeaves) {

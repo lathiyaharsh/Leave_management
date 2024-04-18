@@ -3,7 +3,7 @@ require("dotenv").config();
 const path = require("path");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const Sequelize = require("sequelize");
+const {Op , Sequelize} = require("sequelize");
 const db = require("../config/sequelize");
 const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
@@ -486,6 +486,36 @@ module.exports.logout = async (req, res) => {
 
 module.exports.leaveStatus = async (req, res) => {
   try {
+
+    const { search } = req.query;
+    if (search && search.trim()) {
+      const searchResults = await leaveRequest.findAll({
+        where: {
+          status: {
+            [Op.like]: `%${search}%`,
+          },
+        },
+        order: [["createdAt", "DESC"]],
+        include: [
+          {
+            model: user,
+            as: "requestedBy", // Use the correct alias for requestedBy association
+            attributes: ["id", "name", "email"],
+          },
+          {
+            model: user,
+            as: "requestedTo", // Use the correct alias for requestedTo association
+            attributes: ["id", "name", "email"],
+          },
+        ],
+      });
+
+      return res.status(200).json({
+        message: userMassage.success.studentList,
+        searchResults,
+      });
+    }
+
     const leaveStatus = await leaveRequest.findAll({
       attributes: { 
         include: [

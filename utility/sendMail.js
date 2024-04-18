@@ -10,8 +10,8 @@ const sendMail = async (req, res, emailDetails) => {
       port: 465,
       secure: true,
       auth: {
-        user: "harshlathiya91@gmail.com",
-        pass: "ejlzrfzgkzvcpcpv",
+        user: process.env.EMAILFROM,
+        pass: process.env.EMAILPASSWORD,
       },
     });
 
@@ -25,7 +25,7 @@ const sendMail = async (req, res, emailDetails) => {
     const htmlToSend = template({ name, email, password });
 
     const mail = await transporter.sendMail({
-      from: "harshlathiya91@gmail.com", // sender address
+      from: process.env.EMAILPASSWORD, // sender address
       to: `${email}`, // list of receivers
       subject: "Welcome To LMS", // Subject line
       text: "Hello Manager ", // plain text body

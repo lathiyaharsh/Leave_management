@@ -439,3 +439,66 @@ module.exports.profile = async (req, res) => {
     return res.status(404).json({ message: userMassage.error.genericError });
   }
 };
+
+module.exports.editUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userImage = req.user.image;
+    const userEmail = req.user.email;
+
+    if (userEmail != req.body.email) {
+      const findUser = await checkUser(req.body.email);
+
+      if (findUser) {
+        await deleteFile(req.file);
+        return res.status(400).json({
+          message: userMassage.error.invalidEmail,
+        });
+      }
+    }
+    if (req.file) {
+      const parsedUrl = new URL(userImage);
+      const imagePath = parsedUrl.pathname;
+      const fullPath = path.join(__dirname, "..", imagePath);
+      await fs.unlinkSync(fullPath);
+
+      const baseUrl = `${req.protocol}://${req.get("host")}`;
+      req.body.image = baseUrl + imgPath + "/" + req.file.filename;
+    }
+
+    const { name, email, gender, image, phone, address, department, div } =
+      req.body;
+
+    const updatedUser = {
+      name,
+      email,
+      gender,
+      image,
+      phone,
+      address,
+      department,
+      div,
+    };
+
+    const editUser = await user.update(updatedUser, {
+      where: { id: userId },
+      runValidators: true,
+    });
+
+    if (!editUser)
+      return res.status(400).json({
+        message: userMassage.error.update,
+      });
+
+    return res.status(200).json({
+      message: userMassage.success.update,
+    });
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ errors });
+    }
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};

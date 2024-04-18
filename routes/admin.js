@@ -1,6 +1,7 @@
 const express = require("express");
 const routes = express.Router();
 const { uploadImgPath } = require("../model/user");
+const verifyToken = require("../config/middleware");
 const {
   login,
   registerHod,
@@ -14,7 +15,7 @@ const {
   leaveReport,
   removeUser,
 } = require("../controller/admin");
-const verifyToken = require("../config/middleware");
+
 
 routes.post("/login", login);
 

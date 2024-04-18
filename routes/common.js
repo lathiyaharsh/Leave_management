@@ -11,6 +11,7 @@ const {
   leaveReject,
   profile,
   allLeaveStatus,
+  editUser
 } = require("../controller/common");
 const verifyToken = require("../config/middleware");
 const { route } = require("./student");
@@ -27,5 +28,6 @@ routes.get("/profile", profile);
 routes.get("/allLeaveStatus", allLeaveStatus);
 
 routes.put("/editStudent/:id", uploadImgPath, editStudent);
+routes.put("/editUser", uploadImgPath, editUser);
 
 module.exports = routes;

@@ -139,7 +139,7 @@ const findUserId = async (email) => {
 
 module.exports.registerHod = async (req, res) => {
   try {
-    if (!req.body && !req.file)
+    if (!req.body && !req.file && req.file == undefined)
       return res.status(400).json({ message: userMassage.error.fillDetails });
 
     const { error, value } = validateData(req.body);
@@ -499,12 +499,12 @@ module.exports.leaveStatus = async (req, res) => {
         include: [
           {
             model: user,
-            as: "requestedBy", // Use the correct alias for requestedBy association
+            as: "requestedBy", 
             attributes: ["id", "name", "email"],
           },
           {
             model: user,
-            as: "requestedTo", // Use the correct alias for requestedTo association
+            as: "requestedTo", 
             attributes: ["id", "name", "email"],
           },
         ],
@@ -623,7 +623,7 @@ module.exports.leaveReport = async (req, res) => {
   try {
     const leaveReport = await userLeave.findAll({
       attributes: {
-        exclude: ["id", "academicYear", "createdAt", "updatedAt"], // Specify the fields you want to exclude from the userLeave table
+        exclude: ["id", "academicYear", "createdAt", "updatedAt"], 
       },
       order: [["usedLeave", "DESC"]],
       include: [
@@ -672,3 +672,4 @@ module.exports.removeUser = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
+

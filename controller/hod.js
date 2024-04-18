@@ -5,12 +5,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
-const leaveRequest = require("../model/leaveRequest");
 const { user, imgPath, validateData } = require("../model/user");
 const { role, roleByName, leaveDetails } = require("../config/variables");
 const sendMail = require("../utility/sendMail");
 const moment = require("moment");
-const { where } = require("sequelize");
 
 module.exports.login = async (req, res) => {
   try {
@@ -261,27 +259,4 @@ module.exports.editFaculty = async (req, res) => {
   }
 };
 
-module.exports.profile = async (req, res) => {
-  try {
-    const { name, email, gender, image, roleId, phone, department, address } =
-      req.user;
-    const userDetails = {
-      name,
-      email,
-      gender,
-      image,
-      phone,
-      department,
-      address,
-      user: roleByName[roleId],
-    };
 
-    return res.status(200).json({
-      message: userMassage.success.profileRetrieved,
-      profile: userDetails,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(404).json({ message: userMassage.error.genericError });
-  }
-};

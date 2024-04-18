@@ -3,14 +3,16 @@ require("dotenv").config();
 const path = require("path");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const otpModel = require("../model/otp");
+const { Op, Sequelize, where } = require("sequelize");
 const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
 const leaveRequest = require("../model/leaveRequest");
 const { user, imgPath, validateData } = require("../model/user");
 const { role, roleByName, leaveDetails } = require("../config/variables");
 const sendMail = require("../utility/sendMail");
+const sendOtpMail = require("../utility/sendOtpMail");
 const validateDates = require("../utility/validateDates");
-const { where } = require("sequelize");
 
 const checkUser = async (email) => {
   try {
@@ -236,8 +238,11 @@ module.exports.setLeave = async (req, res, userId) => {
 
 module.exports.editUser = async (req, res) => {
   try {
-    const { id, image, email } = req.user;
-    if (email != req.body.email) {
+    const userId = req.user.id;
+    const userImage = req.user.image;
+    const userEmail = req.user.email;
+
+    if (userEmail != req.body.email) {
       const findUser = await checkUser(req.body.email);
 
       if (findUser) {
@@ -248,7 +253,7 @@ module.exports.editUser = async (req, res) => {
       }
     }
     if (req.file) {
-      const parsedUrl = new URL(image);
+      const parsedUrl = new URL(userImage);
       const imagePath = parsedUrl.pathname;
       const fullPath = path.join(__dirname, "..", imagePath);
       await fs.unlinkSync(fullPath);
@@ -257,8 +262,22 @@ module.exports.editUser = async (req, res) => {
       req.body.image = baseUrl + imgPath + "/" + req.file.filename;
     }
 
-    const editUser = await user.update(req.body, {
-      where: { id },
+    const { name, email, gender, grNumber, phone, address, image, div } =
+      req.body;
+
+    const updatedUser = {
+      name,
+      email,
+      gender,
+      image,
+      grNumber,
+      phone,
+      address,
+      div,
+    };
+
+    const editUser = await user.update(updatedUser, {
+      where: { id: userId },
       runValidators: true,
     });
 
@@ -382,3 +401,105 @@ module.exports.leaveBalance = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
+
+module.exports.forgetPassword = async (req, res) => {
+  try {
+    if (!req.body)
+      return res.status(400).json({ message: userMassage.error.fillDetails });
+
+    const { email } = req.body;
+
+    const findUser = await checkUser(email);
+    if (!findUser)
+      return res.status(404).json({ message: userMassage.error.userNotFound });
+
+    if (findUser) {
+      const otp = generateOTP();
+      const otpDetails = {
+        email,
+        otp,
+      };
+      const createOtp = await otpModel.create(otpDetails);
+
+      if (!createOtp)
+        return res.status(400).json({ message: userMassage.error.otp });
+
+      const sendOtpEmail = await sendOtpMail(req, res, otpDetails);
+
+      if (sendOtpEmail.valid) setTimeout(deleteExpiredOTP, 60 * 3000);
+      return res.status(201).json({ message: userMassage.success.otp });
+    }
+  } catch (error) {
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(400).json({ message: userMassage.error.otpTime });
+    }
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
+function generateOTP() {
+  let digits = "0123456789";
+  let OTP = "";
+  let len = digits.length;
+  for (let i = 0; i < 4; i++) {
+    OTP += digits[Math.floor(Math.random() * len)];
+  }
+
+  return OTP;
+}
+
+async function deleteExpiredOTP() {
+  try {
+    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000); // Calculate the time 3 minutes ago
+    await otpModel.destroy({
+      where: {
+        createdAt: {
+          [Sequelize.Op.lt]: threeMinutesAgo, // Find OTPs created more than 3 minutes ago
+        },
+      },
+    });
+    console.log("Expired OTPs deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting expired OTPs:", error);
+  }
+}
+
+module.exports.verifyOtp = async (req,res)=>{
+  try {
+    const { email , otp  } = req.body;
+
+    const findOtp = await otpModel.findOne({where:{email}});
+
+    if(findOtp.otp == otp){
+      return res.status(200).json({ message: userMassage.success.otpVerify });
+    }
+
+    return res.status(400).json({ message: userMassage.error.otpVerify });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+
+  }
+}
+
+module.exports.resetPassword = async(req,res)=>{
+  try {
+    const { email , password } = req.body;
+
+    const updatePassword ={
+      password:await bcrypt.hash(password, 10)
+    }
+
+    const updateDetails = await user.update(updatePassword,{where:{email}});
+    
+    if(!updateDetails)   return res.status(400).json({ message: userMassage.error.update });
+
+    return res.status(200).json({ message: userMassage.success.update });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+
+  }
+}

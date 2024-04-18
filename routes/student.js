@@ -9,12 +9,18 @@ const {
   applyLeave,
   leaveStatus,
   leaveBalance,
+  forgetPassword,
+  verifyOtp,
+  resetPassword,
 } = require("../controller/user");
 const { uploadImgPath } = require("../model/user");
 const verifyToken = require("../config/middleware");
 
 routes.post("/login", login);
 routes.post("/register", uploadImgPath, register);
+routes.post("/forgetPassword", forgetPassword);
+routes.post("/verifyOtp", verifyOtp);
+routes.post("/resetPassword", resetPassword);
 
 routes.use(verifyToken(["student"]));
 routes.put("/editUser", uploadImgPath, editUser);

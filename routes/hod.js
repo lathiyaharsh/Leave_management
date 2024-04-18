@@ -5,7 +5,6 @@ const {
   login,
   logout,
   registerFaculty,
-  profile,
   editFaculty,
 } = require("../controller/hod");
 const verifyToken = require("../config/middleware");
@@ -16,6 +15,5 @@ routes.use(verifyToken(["hod"]));
 routes.post("/registerFaculty", uploadImgPath, registerFaculty);
 routes.post("/editFaculty/:id", uploadImgPath, editFaculty);
 routes.get("/logout", logout);
-routes.get("/profile", profile);
 
 module.exports = routes;

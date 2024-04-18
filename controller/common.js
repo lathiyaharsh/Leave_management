@@ -1,7 +1,7 @@
 const fs = require("fs");
 require("dotenv").config();
 const path = require("path");
-const { Op } = require("sequelize");
+const { Op , Sequelize } = require("sequelize");
 const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
 const leaveRequest = require("../model/leaveRequest");
@@ -240,9 +240,18 @@ module.exports.leaveStatus = async (req, res) => {
   try {
     const requestToId = req.user.id;
     const leaveStatus = await leaveRequest.findAll({
+      attributes: { 
+        include: [
+          [Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`), 'leaveDifference']
+        ]
+      },
       where: { requestToId },
       order: [["createdAt", "DESC"]],
       include: [
+        {
+          model: userLeave,
+          attributes: ["usedLeave","availableLeave"],
+        },
         {
           model: user,
           as: "requestedBy",

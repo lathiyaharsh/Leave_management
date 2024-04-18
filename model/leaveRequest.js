@@ -1,6 +1,7 @@
 const { user } = require("./user");
 const db = require("../config/sequelize");
 const { DataTypes } = require("sequelize");
+const userLeave = require("./userLeave");
 
 const leaveRequest = db.define("leaveRequest", {
   id: {
@@ -50,6 +51,12 @@ leaveRequest.belongsTo(user, {
   onDelete: "CASCADE",
   foreignKey: "requestToId",
   as: "requestedTo",
+});
+
+leaveRequest.belongsTo(userLeave, {
+  onDelete: "CASCADE",
+  foreignKey: "userId",
+  targetKey: "userId",
 });
 
 module.exports = leaveRequest;

@@ -1,6 +1,7 @@
 const { user } = require('./user');
 const db = require('../config/sequelize');
 const { DataTypes } = require('sequelize');
+const leaveRequest = require('./leaveRequest');
 
 const userLeave = db.define("userLeave",{
     id:{

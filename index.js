@@ -3,6 +3,7 @@ const cookieParser = require("cookie-parser");
 const express = require("express");
 const path = require("path");
 const port = process.env.PORT;
+const leaveMails = require('./utility/sendLeaveMail');
 require("./model/index");
 
 const app = express();

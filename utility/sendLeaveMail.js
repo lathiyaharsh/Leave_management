@@ -1,5 +1,4 @@
 const cron = require("node-cron");
-const sendEmail = require("./utility/mail");
 const leave = require("../model/leaveRequest");
 const { user } = require("../model/user");
 const handlebars = require("handlebars");
@@ -8,13 +7,13 @@ const getPendingLeave = async () => {
   const PendingLeaves = await leave.findAll({ where: { status: "Pending" } });
   return PendingLeaves;
 };
-const findUser = async (requestId) => {
-  const userDetails = await user.findOne({ where: { id: requestId } });
+const findUser = async (requestToId) => {
+  const userDetails = await user.findOne({ where: { id: requestToId } }); 
   return userDetails;
 };
 const sendReminderEmail = async (PendingLeaves) => {
   for (const leave of PendingLeaves) {
-    const userDetail = await findUser(leave.requestId);
+    const userDetail = await findUser(leave.requestToId);
     console.log(userDetail);
     const viewsDirectory = path.resolve(__dirname, "../views");
     const filePath = path.join(viewsDirectory, "leaveMail.hbs");
@@ -36,7 +35,11 @@ const sendReminderEmail = async (PendingLeaves) => {
     await sendEmail(mailOptions);
   }
 };
-cron.schedule("0 9 * * *", async () => {
+// cron.schedule("0 11 * * *", async () => {
+//   const PendingLeaves = await getPendingLeave();
+//   await sendReminderEmail(PendingLeaves);
+// });
+cron.schedule("57 10 * * *", async () => {
   const PendingLeaves = await getPendingLeave();
   await sendReminderEmail(PendingLeaves);
 });

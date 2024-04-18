@@ -487,16 +487,25 @@ module.exports.logout = async (req, res) => {
 module.exports.leaveStatus = async (req, res) => {
   try {
     const leaveStatus = await leaveRequest.findAll({
+      attributes: { 
+        include: [
+          [Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`), 'leaveDifference']
+        ]
+      },
       order: [["createdAt", "DESC"]],
       include: [
         {
+          model: userLeave,
+          attributes: ["usedLeave","availableLeave"],
+        },
+        {
           model: user,
-          as: "requestedBy", // Use the correct alias for requestedBy association
+          as: "requestedBy", 
           attributes: ["id", "name", "email"],
         },
         {
           model: user,
-          as: "requestedTo", // Use the correct alias for requestedTo association
+          as: "requestedTo", 
           attributes: ["id", "name", "email"],
         },
       ],

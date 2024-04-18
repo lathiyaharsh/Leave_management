@@ -13,6 +13,7 @@ const {
   pagination,
 } = require("../config/variables");
 const sendMail = require("../utility/sendMail");
+const sendLeaveUpdate = require("../utility/sendLeaveUpdate");
 const moment = require("moment");
 
 const checkUser = async (email) => {
@@ -343,7 +344,7 @@ module.exports.leaveApproval = async (req, res) => {
       );
       if (leaveApproval) {
         const leaveDetails = await leaveRequest.findOne({ where: { id } });
-        const { startDate, endDate, userId } = leaveDetails;
+        const { startDate, endDate, userId, leaveType } = leaveDetails;
         const start = moment(startDate, "YYYY-MM-DD");
         const end = moment(endDate, "YYYY-MM-DD");
         const leaveDays = start.isSame(end, "day")
@@ -367,10 +368,26 @@ module.exports.leaveApproval = async (req, res) => {
         const updateLeave = await userLeave.update(updateLeaveDetails, {
           where: { userId },
         });
-        if (updateLeave)
+
+        const emailDetails = {
+          userId,
+          startDate,
+          endDate,
+          leaveType,
+          status: "Approved",
+        };
+
+        if (updateLeave) {
+          const sendMail = await sendLeaveUpdate(req, res, emailDetails);
+          if (sendMail.valid)
+            return res
+              .status(201)
+              .json({ message: userMassage.success.signUpSuccessWithEmail });
+
           return res
             .status(200)
             .json({ message: userMassage.success.leaveApproval });
+        }
       }
     }
 
@@ -384,10 +401,11 @@ module.exports.leaveApproval = async (req, res) => {
 module.exports.leaveReject = async (req, res) => {
   try {
     const id = req.params.id;
-    const userId = req.user.id;
+    const loginUser = req.user.id;
     const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
-    const { status, requestToId } = checkLeaveStatus;
-    if (requestToId != userId)
+    const { status, requestToId, userId, startDate, endDate, leaveType } =
+      checkLeaveStatus;
+    if (requestToId != loginUser)
       return res.status(400).json({
         message: userMassage.error.leaveStatusError,
       });
@@ -396,7 +414,25 @@ module.exports.leaveReject = async (req, res) => {
         { status: "Rejected" },
         { where: { id }, returning: true }
       );
-      return res.status(200).json({ message: userMassage.success.leaveReject });
+
+      const emailDetails = {
+        userId,
+        startDate,
+        endDate,
+        leaveType,
+        status: "Rejected",
+      };
+      if (leaveReject) {
+        const sendMail = await sendLeaveUpdate(req, res, emailDetails);
+        if (sendMail.valid)
+          return res
+            .status(201)
+            .json({ message: userMassage.success.signUpSuccessWithEmail });
+
+        return res
+          .status(200)
+          .json({ message: userMassage.success.leaveReject });
+      }
     }
     return res.status(200).json({ message: userMassage.error.leaveStatus });
   } catch (error) {

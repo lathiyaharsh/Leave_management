@@ -210,7 +210,12 @@ module.exports.registerHod = async (req, res) => {
       email,
       password: req.body.password,
     };
-    await sendMail(req, res, emailDetails);
+    
+    const sendEmail = await sendMail(req, res, emailDetails);
+    if (sendEmail.valid)
+      return res
+        .status(201)
+        .json({ message: userMassage.success.signUpSuccessWithEmail });
     return res.status(201).json({ message: userMassage.success.signUpSuccess });
   } catch (error) {
     if (req.file) await deleteFile(req.file);
@@ -378,7 +383,11 @@ module.exports.registerFaculty = async (req, res) => {
       email,
       password: req.body.password,
     };
-    await sendMail(req, res, emailDetails);
+    const sendEmail = await sendMail(req, res, emailDetails);
+    if (sendEmail.valid)
+      return res
+        .status(201)
+        .json({ message: userMassage.success.signUpSuccessWithEmail });
     return res.status(201).json({ message: userMassage.success.signUpSuccess });
   } catch (error) {
     if (req.file) await deleteFile(req.file);

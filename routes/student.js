@@ -20,7 +20,8 @@ routes.post("/login", login);
 routes.post("/register", uploadImgPath, register);
 routes.post("/forgetPassword", forgetPassword);
 routes.post("/verifyOtp", verifyOtp);
-routes.post("/resetPassword", resetPassword);
+
+routes.put("/resetPassword", resetPassword);
 
 routes.use(verifyToken(["student"]));
 routes.put("/editUser", uploadImgPath, editUser);

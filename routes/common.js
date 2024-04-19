@@ -22,7 +22,7 @@ const verifyToken = require("../middleware/middleware");
 const { route } = require("./student");
 
 routes.post("/login", login);
-routes.post("/logout", logout);
+routes.get("/logout", logout);
 
 routes.use(verifyToken(["admin", "hod", "faculty"]));
 

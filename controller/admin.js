@@ -309,7 +309,7 @@ module.exports.setLeaveFaculty = async (req, res, userId) => {
       academicYear,
       totalWorkingDays,
       attendancePercentage,
-    } = leaveDetails.hod;
+    } = leaveDetails.faculty;
 
     const studentLeave = {
       userId,

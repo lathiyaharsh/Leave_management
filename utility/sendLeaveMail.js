@@ -71,7 +71,7 @@ const sendReminderEmail = async (PendingLeaves) => {
     console.log(error);
   }
 };
-cron.schedule("0 10 * * *", async () => {
+cron.schedule("0 17 * * *", async () => {
   const PendingLeaves = await getPendingLeave();
   await sendReminderEmail(PendingLeaves);
 });

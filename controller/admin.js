@@ -2,18 +2,14 @@ const fs = require("fs");
 require("dotenv").config();
 const path = require("path");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const { Op, Sequelize } = require("sequelize");
-const db = require("../config/sequelize");
 const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
 const leaveRequest = require("../model/leaveRequest");
 const { user, imgPath, validateData } = require("../model/user");
-const { role, roleByName, leaveDetails } = require("../config/variables");
+const { role, leaveDetails } = require("../config/variables");
 const sendMail = require("../utility/sendMail");
 const moment = require("moment");
-
-
 
 const checkUser = async (email) => {
   try {

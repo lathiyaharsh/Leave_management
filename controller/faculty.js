@@ -1,7 +1,6 @@
 require("dotenv").config();
 const { userMassage } = require("../config/message");
 
-
 module.exports.logout = async (req, res) => {
   try {
     res.clearCookie("jwt");

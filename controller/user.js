@@ -53,11 +53,11 @@ function generateOTP() {
 
 async function deleteExpiredOTP() {
   try {
-    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000); 
+    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
     await otpModel.destroy({
       where: {
         createdAt: {
-          [Sequelize.Op.lt]: threeMinutesAgo, 
+          [Sequelize.Op.lt]: threeMinutesAgo,
         },
       },
     });
@@ -341,13 +341,14 @@ module.exports.applyLeave = async (req, res) => {
   try {
     const userId = req.user.id;
     const status = "Pending";
+    const { roleId } = req.user;
     const checkLeave = await leaveRequest.findAndCountAll({
       where: { userId, status },
     });
 
     if (checkLeave.count <= 2) {
       const { startDate, endDate, leaveType, reason } = req.body;
-      const requestToId = req.body?.requestToId || 2;
+      const requestToId = req.body?.requestToId || 3;
       const dates = {
         startDate,
         endDate,
@@ -363,6 +364,7 @@ module.exports.applyLeave = async (req, res) => {
         leaveType,
         reason,
         requestToId,
+        roleId,
       };
 
       const createLeave = await leaveRequest.create(leaveDetails);
@@ -464,7 +466,6 @@ module.exports.forgetPassword = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
-
 
 module.exports.verifyOtp = async (req, res) => {
   try {

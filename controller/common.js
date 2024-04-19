@@ -316,7 +316,7 @@ module.exports.leaveStatus = async (req, res) => {
 
 module.exports.allLeaveStatus = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, userRole } = req.query;
     if (search && search.trim()) {
       const searchResults = await leaveRequest.findAll({
         where: {
@@ -328,13 +328,39 @@ module.exports.allLeaveStatus = async (req, res) => {
         include: [
           {
             model: user,
-            as: "requestedBy", // Use the correct alias for requestedBy association
-            attributes: ["id", "name", "email"],
+            as: "requestedBy",
+            attributes: ["id", "name", "email", "roleId"],
           },
           {
             model: user,
-            as: "requestedTo", // Use the correct alias for requestedTo association
-            attributes: ["id", "name", "email"],
+            as: "requestedTo",
+            attributes: ["id", "name", "email", "roleId"],
+          },
+        ],
+      });
+
+      return res.status(200).json({
+        message: userMassage.success.studentList,
+        searchResults,
+      });
+    }
+    if (userRole) {
+      const findRole = role[userRole];
+      const searchResults = await leaveRequest.findAll({
+        where: {
+          roleId: findRole,
+        },
+        order: [["createdAt", "DESC"]],
+        include: [
+          {
+            model: user,
+            as: "requestedBy",
+            attributes: ["id", "name", "email", "roleId"],
+          },
+          {
+            model: user,
+            as: "requestedTo",
+            attributes: ["id", "name", "email", "roleId"],
           },
         ],
       });
@@ -587,6 +613,7 @@ module.exports.applyLeave = async (req, res) => {
   try {
     const userId = req.user.id;
     const status = "Pending";
+    const { roleId } = req.user;
     const checkLeave = await leaveRequest.findAndCountAll({
       where: { userId, status },
     });
@@ -609,6 +636,7 @@ module.exports.applyLeave = async (req, res) => {
         leaveType,
         reason,
         requestToId,
+        roleId,
       };
 
       const createLeave = await leaveRequest.create(leaveDetails);

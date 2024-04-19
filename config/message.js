@@ -11,7 +11,7 @@ module.exports = {
       logout: "Logged out successfully",
       leaveRequest: "Leave request sent successfully",
       leaveStatus: "Leave status retrieved successfully",
-      leaveBalance: "Leave Balance retrieved successfully",
+      leaveBalance: "Leave balance retrieved successfully",
       leaveApproval: "Leave approved successfully",
       leaveReject: "Leave rejected successfully",
       studentList: "The list has been retrieved successfully.",

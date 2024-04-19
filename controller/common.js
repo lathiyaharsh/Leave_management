@@ -316,68 +316,21 @@ module.exports.leaveStatus = async (req, res) => {
 module.exports.allLeaveStatus = async (req, res) => {
   try {
     const { search, userRole } = req.query;
-    if (search && search.trim()) {
-      const searchResults = await leaveRequest.findAll({
-        where: {
-          status: {
-            [Op.like]: `%${search}%`,
-          },
-        },
-        order: [["createdAt", "DESC"]],
-        include: [
-          {
-            model: userLeave,
-            attributes: ["usedLeave", "availableLeave"],
-          },
-          {
-            model: user,
-            as: "requestedBy",
-            attributes: ["id", "name", "email", "roleId"],
-          },
-          {
-            model: user,
-            as: "requestedTo",
-            attributes: ["id", "name", "email", "roleId"],
-          },
-        ],
-      });
+    let whereCondition = {};
 
-      return res.status(200).json({
-        message: userMassage.success.studentList,
-        searchResults,
-      });
+    if (search && search.trim()) {
+      whereCondition.status = {
+        [Op.like]: `${search}%`,
+      };
     }
+
     if (userRole) {
       const findRole = role[userRole];
-      const searchResults = await leaveRequest.findAll({
-        where: {
-          roleId: findRole,
-        },
-        order: [["createdAt", "DESC"]],
-        include: [
-          {
-            model: userLeave,
-            attributes: ["usedLeave", "availableLeave"],
-          },
-          {
-            model: user,
-            as: "requestedBy",
-            attributes: ["id", "name", "email", "roleId"],
-          },
-          {
-            model: user,
-            as: "requestedTo",
-            attributes: ["id", "name", "email", "roleId"],
-          },
-        ],
-      });
-
-      return res.status(200).json({
-        message: userMassage.success.studentList,
-        searchResults,
-      });
+      whereCondition.roleId = findRole;
     }
-    const leaveStatus = await leaveRequest.findAll({
+
+    const searchResults = await leaveRequest.findAll({
+      where: whereCondition,
       order: [["createdAt", "DESC"]],
       include: [
         {
@@ -396,9 +349,11 @@ module.exports.allLeaveStatus = async (req, res) => {
         },
       ],
     });
-    return res
-      .status(200)
-      .json({ leaveStatus, message: userMassage.success.leaveStatus });
+
+    return res.status(200).json({
+      message: userMassage.success.studentList,
+      searchResults,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });

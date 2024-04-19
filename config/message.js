@@ -20,6 +20,8 @@ module.exports = {
       userDelete:"The user has been deleted successfully.",
       otp:"The otp has been send successfully.",
       otpVerify:"The otp successfully verified.",
+      leaveUpdate:"The leave update email send successfully.",
+      leaveUpdateWithOutEmail:"The leave updated successfully. but email not send successfully. please update to user",
     },
     error: {
       unauthorized: "Unauthorized - invalid token",

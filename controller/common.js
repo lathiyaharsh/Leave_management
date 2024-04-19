@@ -382,11 +382,14 @@ module.exports.leaveApproval = async (req, res) => {
           if (sendMail.valid)
             return res
               .status(201)
-              .json({ message: userMassage.success.signUpSuccessWithEmail });
+              .json({ message: userMassage.success.leaveUpdate });
 
           return res
             .status(200)
-            .json({ message: userMassage.success.leaveApproval });
+            .json({
+              message: userMassage.success.leaveApproval,
+              update: userMassage.success.leaveUpdateWithOutEmail,
+            });
         }
       }
     }
@@ -427,11 +430,14 @@ module.exports.leaveReject = async (req, res) => {
         if (sendMail.valid)
           return res
             .status(201)
-            .json({ message: userMassage.success.signUpSuccessWithEmail });
+            .json({ message: userMassage.success.leaveUpdate });
 
         return res
           .status(200)
-          .json({ message: userMassage.success.leaveReject });
+          .json({
+            message: userMassage.success.leaveReject,
+            update: userMassage.success.leaveUpdateWithOutEmail,
+          });
       }
     }
     return res.status(200).json({ message: userMassage.error.leaveStatus });

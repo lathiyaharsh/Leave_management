@@ -14,7 +14,7 @@ const {
   resetPassword,
 } = require("../controller/user");
 const { uploadImgPath } = require("../model/user");
-const verifyToken = require("../config/middleware");
+const verifyToken = require("../middleware/middleware");
 
 
 routes.post("/login", login);

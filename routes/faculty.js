@@ -1,9 +1,8 @@
 const express = require("express");
 const routes = express.Router();
 const { login, logout } = require("../controller/faculty");
-const verifyToken = require("../config/middleware");
+const verifyToken = require("../middleware/middleware");
 
-routes.post("/login", login);
 
 routes.use(verifyToken(["faculty"]));
 routes.get("/logout", logout);

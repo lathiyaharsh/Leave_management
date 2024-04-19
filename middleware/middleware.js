@@ -1,8 +1,8 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const { userMassage } = require("./message");
+const { userMassage } = require("../config/message");
 const { user } = require("../model/user");
-const { roleByName } = require("./variables");
+const { roleByName } = require("../config/variables");
 const fs = require("fs");
 
 const verifyToken = (role) => {

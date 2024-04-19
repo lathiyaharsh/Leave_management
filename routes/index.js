@@ -18,7 +18,8 @@ routes.get(
   }
 );
 
-routes.get('/home',async(req,res)=>{
-    res.send('Home')
+routes.get("/home", async (req, res) => {
+  res.send("Home");
 });
+
 module.exports = routes;

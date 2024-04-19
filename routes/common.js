@@ -2,6 +2,8 @@ const express = require("express");
 const routes = express.Router();
 const { uploadImgPath } = require("../model/user");
 const {
+  login,
+  logout,
   studentList,
   hodList,
   facultyList,
@@ -16,8 +18,11 @@ const {
   userLeaveStatus,
   leaveBalance,
 } = require("../controller/common");
-const verifyToken = require("../config/middleware");
+const verifyToken = require("../middleware/middleware");
 const { route } = require("./student");
+
+routes.post("/login", login);
+routes.post("/logout", logout);
 
 routes.use(verifyToken(["admin", "hod", "faculty"]));
 

@@ -40,6 +40,33 @@ const findUserId = async (email) => {
   }
 };
 
+function generateOTP() {
+  let digits = "0123456789";
+  let OTP = "";
+  let len = digits.length;
+  for (let i = 0; i < 4; i++) {
+    OTP += digits[Math.floor(Math.random() * len)];
+  }
+
+  return OTP;
+}
+
+async function deleteExpiredOTP() {
+  try {
+    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000); 
+    await otpModel.destroy({
+      where: {
+        createdAt: {
+          [Sequelize.Op.lt]: threeMinutesAgo, 
+        },
+      },
+    });
+    console.log("Expired OTPs deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting expired OTPs:", error);
+  }
+}
+
 module.exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -438,32 +465,6 @@ module.exports.forgetPassword = async (req, res) => {
   }
 };
 
-function generateOTP() {
-  let digits = "0123456789";
-  let OTP = "";
-  let len = digits.length;
-  for (let i = 0; i < 4; i++) {
-    OTP += digits[Math.floor(Math.random() * len)];
-  }
-
-  return OTP;
-}
-
-async function deleteExpiredOTP() {
-  try {
-    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000); // Calculate the time 3 minutes ago
-    await otpModel.destroy({
-      where: {
-        createdAt: {
-          [Sequelize.Op.lt]: threeMinutesAgo, // Find OTPs created more than 3 minutes ago
-        },
-      },
-    });
-    console.log("Expired OTPs deleted successfully.");
-  } catch (error) {
-    console.error("Error deleting expired OTPs:", error);
-  }
-}
 
 module.exports.verifyOtp = async (req, res) => {
   try {

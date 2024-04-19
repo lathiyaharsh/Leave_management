@@ -2,18 +2,14 @@ const express = require("express");
 const routes = express.Router();
 const { uploadImgPath } = require("../model/user");
 const {
-  login,
-  logout,
   registerFaculty,
   editFaculty,
 } = require("../controller/hod");
-const verifyToken = require("../config/middleware");
+const verifyToken = require("../middleware/middleware");
 
-routes.post("/login", login);
 
 routes.use(verifyToken(["hod"]));
 routes.post("/registerFaculty", uploadImgPath, registerFaculty);
 routes.post("/editFaculty/:id", uploadImgPath, editFaculty);
-routes.get("/logout", logout);
 
 module.exports = routes;

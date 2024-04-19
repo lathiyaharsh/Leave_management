@@ -453,12 +453,12 @@ module.exports.leaveStatus = async (req, res) => {
           {
             model: user,
             as: "requestedBy",
-            attributes: ["id", "name", "email","roleId"],
+            attributes: ["id", "name", "email", "roleId"],
           },
           {
             model: user,
             as: "requestedTo",
-            attributes: ["id", "name", "email","roleId"],
+            attributes: ["id", "name", "email", "roleId"],
           },
         ],
       });

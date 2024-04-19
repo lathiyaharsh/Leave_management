@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 const handlebars = require("handlebars");
-const path = require('path');
-const fs = require('fs');
+const path = require("path");
+const fs = require("fs");
 
 const sendMail = async (req, res, emailDetails) => {
   try {

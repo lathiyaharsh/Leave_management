@@ -3,10 +3,10 @@ const cookieParser = require("cookie-parser");
 const express = require("express");
 const path = require("path");
 const port = process.env.PORT;
-const leaveMails = require('./utility/sendLeaveMail');
-const passport = require('passport');
-const GoogleStrategy = require('./config/googleStrategy');
-const session = require('express-session');
+const leaveMails = require("./utility/sendLeaveMail");
+const passport = require("passport");
+const GoogleStrategy = require("./config/googleStrategy");
+const session = require("express-session");
 
 require("./model/index");
 
@@ -18,21 +18,23 @@ app.use(cookieParser());
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use(session({
-  name : "harsh",
-  secret : "harsh",
-  resave : false,
-  saveUninitialized : false,
-}));
+app.use(
+  session({
+    name: "harsh",
+    secret: "harsh",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.serializeUser(function(user, done) {
+passport.serializeUser(function (user, done) {
   done(null, user);
 });
 
-passport.deserializeUser(function(user, done) {
+passport.deserializeUser(function (user, done) {
   done(null, user);
 });
 

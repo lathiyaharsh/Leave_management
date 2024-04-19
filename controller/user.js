@@ -465,41 +465,41 @@ async function deleteExpiredOTP() {
   }
 }
 
-module.exports.verifyOtp = async (req,res)=>{
+module.exports.verifyOtp = async (req, res) => {
   try {
-    const { email , otp  } = req.body;
+    const { email, otp } = req.body;
 
-    const findOtp = await otpModel.findOne({where:{email}});
+    const findOtp = await otpModel.findOne({ where: { email } });
 
-    if(findOtp.otp == otp){
+    if (findOtp.otp == otp) {
       return res.status(200).json({ message: userMassage.success.otpVerify });
     }
 
     return res.status(400).json({ message: userMassage.error.otpVerify });
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });
-
   }
-}
+};
 
-module.exports.resetPassword = async(req,res)=>{
+module.exports.resetPassword = async (req, res) => {
   try {
-    const { email , password } = req.body;
+    const { email, password } = req.body;
 
-    const updatePassword ={
-      password:await bcrypt.hash(password, 10)
-    }
+    const updatePassword = {
+      password: await bcrypt.hash(password, 10),
+    };
 
-    const updateDetails = await user.update(updatePassword,{where:{email}});
-    
-    if(!updateDetails)   return res.status(400).json({ message: userMassage.error.update });
+    const updateDetails = await user.update(updatePassword, {
+      where: { email },
+    });
+
+    if (!updateDetails)
+      return res.status(400).json({ message: userMassage.error.update });
 
     return res.status(200).json({ message: userMassage.success.update });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });
-
   }
-}
+};

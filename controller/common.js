@@ -256,7 +256,7 @@ module.exports.leaveStatus = async (req, res) => {
         {
           model: user,
           as: "requestedBy",
-          attributes: ["id", "name", "email", "div","roleId"],
+          attributes: ["id", "name", "email", "div", "roleId"],
         },
       ],
     });
@@ -304,13 +304,13 @@ module.exports.allLeaveStatus = async (req, res) => {
       include: [
         {
           model: user,
-          as: "requestedBy", // Use the correct alias for requestedBy association
-          attributes: ["id", "name", "email","roleId"],
+          as: "requestedBy",
+          attributes: ["id", "name", "email", "roleId"],
         },
         {
           model: user,
-          as: "requestedTo", // Use the correct alias for requestedTo association
-          attributes: ["id", "name", "email","roleId"],
+          as: "requestedTo",
+          attributes: ["id", "name", "email", "roleId"],
         },
       ],
     });

@@ -23,11 +23,17 @@ const sendLeaveUpdate = async (req, res, emailDetails) => {
 
     const { userId, startDate, endDate, leaveType, status } = emailDetails;
 
-    const userEmail = await user.findOne({where:{id:userId}});
+    const userEmail = await user.findOne({ where: { id: userId } });
 
-    const { email , name } = userEmail
+    const { email, name } = userEmail;
 
-    const htmlToSend = template({ name, startDate, endDate, leaveType, status });
+    const htmlToSend = template({
+      name,
+      startDate,
+      endDate,
+      leaveType,
+      status,
+    });
 
     const mail = await transporter.sendMail({
       from: process.env.EMAILPASSWORD, // sender address

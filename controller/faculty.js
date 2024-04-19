@@ -1,10 +1,9 @@
-
 require("dotenv").config();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { userMassage } = require("../config/message");
 const { user } = require("../model/user");
-const {  roleByName } = require("../config/variables");
+const { roleByName } = require("../config/variables");
 
 module.exports.login = async (req, res) => {
   try {
@@ -59,4 +58,3 @@ module.exports.logout = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
-

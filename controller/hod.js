@@ -258,5 +258,3 @@ module.exports.editFaculty = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
-
-

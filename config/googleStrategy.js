@@ -13,30 +13,34 @@ passport.use(
       callbackURL: "/google/callback",
     },
     async function (accessToken, refreshToken, profile, cb) {
-      const checkEmail = await user.findOne({
-        where: { email: profile.emails[0].value },
-      });
-      if (checkEmail) {
-        cb(null, checkEmail);
-      } else {
-        const pass = `${profile.emails[0].value}@123`;
-
-        const userDetails = {
-          name: profile.displayName,
-          email: profile.emails[0].value,
-          gender: "male",
-          image: profile.photos[0].value,
-          phone: 1234568912,
-          address: "India",
-          password: await bcrypt.hash(pass, 10),
-          roleId: role.student,
-        };
-        const userData = await user.create(userDetails);
-        if (userData) {
-          return cb(null, userData);
+      try {
+        const checkEmail = await user.findOne({
+          where: { email: profile.emails[0].value },
+        });
+        if (checkEmail) {
+          cb(null, checkEmail);
         } else {
-          return cb(null, false);
+          const pass = `${profile.emails[0].value}@123`;
+
+          const userDetails = {
+            name: profile.displayName,
+            email: profile.emails[0].value,
+            gender: "male",
+            image: profile.photos[0].value,
+            phone: 1234568912,
+            address: "India",
+            password: await bcrypt.hash(pass, 10),
+            roleId: role.student,
+          };
+          const userData = await user.create(userDetails);
+          if (userData) {
+            return cb(null, userData);
+          } else {
+            return cb(null, false);
+          }
         }
+      } catch (error) {
+        console.log(error);
       }
     }
   )

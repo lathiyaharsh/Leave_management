@@ -1,8 +1,8 @@
-<!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pending Leave Reminder</title>
     <style>
         body {
@@ -12,39 +12,51 @@
             padding: 0;
             background-color: #f4f4f4;
         }
+
         .container {
             max-width: 600px;
             margin: 20px auto;
             padding: 20px;
             background-color: #fff;
-            border-radius: 8px;
+            border-radius:
+                8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        h1, p {
+
+        h1,
+        p {
             margin: 0;
         }
+
         .message {
             margin-bottom: 20px;
         }
+
         .details {
             margin-bottom: 20px;
-            padding: 15px;
+            padding:
+                15px;
             background-color: #f9f9f9;
             border-radius: 6px;
         }
+
         .footer {
             font-size: 0.8em;
             color: #777;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>Leave Request {{ status }}</h1>
+        <h1>Leave Request {{status}}</h1>
         <div class="message">
             <p>Dear {{name}},</p>
             <p>I hope this email finds you well.</p>
-            <p>This is a gentle reminder regarding pending leave requests. Our records indicate that you have a leave request awaiting approval. Please take a moment to review your request and ensure that all necessary details are provided.</p>
+            <p>This is a gentle reminder regarding pending leave requests. Our
+                records indicate that you have a leave request awaiting approval.
+                Please take a moment to review your request and ensure that all
+                necessary details are provided.</p>
         </div>
         <div class="details">
             <p><strong>Leave Details:</strong></p>
@@ -55,10 +67,14 @@
                 <li><strong>Reason:</strong> {{reason}}</li>
             </ul>
         </div>
-        <p>If you have already submitted the required documentation, kindly disregard this reminder.</p>
-        <p>Should you have any questions or require further assistance, please feel free to reach out to [HR Contact Name] at [HR Contact Email/Phone Number].</p>
+        <p>If you have already submitted the required documentation, kindly
+            disregard this reminder.</p>
+        <p>Should you have any questions or require further assistance, please
+            feel free to reach out to [HR Contact Name] at [HR Contact Email/Phone
+            Number].</p>
         <p>Thank you for your attention to this matter.</p>
-        <p class="footer">Best regards,<br>Admin<br>Head Of Website</p>
+        <p class="footer">Best regards,<br />Admin<br />Head Of Website</p>
     </div>
 </body>
+
 </html>

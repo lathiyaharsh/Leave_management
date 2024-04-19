@@ -9,7 +9,6 @@ const { user, imgPath } = require("../model/user");
 const { role, roleByName, pagination } = require("../config/variables");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
 const sendLeaveUpdate = require("../utility/sendLeaveUpdate");
 const moment = require("moment");
 const sendMail = require("../utility/sendMail");
@@ -327,6 +326,10 @@ module.exports.allLeaveStatus = async (req, res) => {
         order: [["createdAt", "DESC"]],
         include: [
           {
+            model: userLeave,
+            attributes: ["usedLeave", "availableLeave"],
+          },
+          {
             model: user,
             as: "requestedBy",
             attributes: ["id", "name", "email", "roleId"],
@@ -353,6 +356,10 @@ module.exports.allLeaveStatus = async (req, res) => {
         order: [["createdAt", "DESC"]],
         include: [
           {
+            model: userLeave,
+            attributes: ["usedLeave", "availableLeave"],
+          },
+          {
             model: user,
             as: "requestedBy",
             attributes: ["id", "name", "email", "roleId"],
@@ -373,6 +380,10 @@ module.exports.allLeaveStatus = async (req, res) => {
     const leaveStatus = await leaveRequest.findAll({
       order: [["createdAt", "DESC"]],
       include: [
+        {
+          model: userLeave,
+          attributes: ["usedLeave", "availableLeave"],
+        },
         {
           model: user,
           as: "requestedBy",

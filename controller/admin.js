@@ -10,6 +10,7 @@ const { user, imgPath, validateData } = require("../model/user");
 const { role, leaveDetails } = require("../config/variables");
 const sendMail = require("../utility/sendMail");
 const moment = require("moment");
+const sendLeaveUpdate = require("../utility/sendLeaveUpdate");
 
 const checkUser = async (email) => {
   try {
@@ -395,7 +396,7 @@ module.exports.logout = async (req, res) => {
 
 module.exports.leaveStatus = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search , userRole } = req.query;
     if (search && search.trim()) {
       const searchResults = await leaveRequest.findAll({
         where: {
@@ -405,6 +406,41 @@ module.exports.leaveStatus = async (req, res) => {
         },
         order: [["createdAt", "DESC"]],
         include: [
+          {
+            model: userLeave,
+            attributes: ["usedLeave", "availableLeave"],
+          },
+          {
+            model: user,
+            as: "requestedBy",
+            attributes: ["id", "name", "email", "roleId"],
+          },
+          {
+            model: user,
+            as: "requestedTo",
+            attributes: ["id", "name", "email", "roleId"],
+          },
+        ],
+      });
+
+      return res.status(200).json({
+        message: userMassage.success.studentList,
+        searchResults,
+      });
+    }
+
+    if (userRole) {
+      const findRole = role[userRole];
+      const searchResults = await leaveRequest.findAll({
+        where: {
+          roleId: findRole,
+        },
+        order: [["createdAt", "DESC"]],
+        include: [
+          {
+            model: userLeave,
+            attributes: ["usedLeave", "availableLeave"],
+          },
           {
             model: user,
             as: "requestedBy",
@@ -473,7 +509,7 @@ module.exports.leaveApproval = async (req, res) => {
       );
       if (leaveApproval) {
         const leaveDetails = await leaveRequest.findOne({ where: { id } });
-        const { startDate, endDate, userId } = leaveDetails;
+        const { startDate, endDate, userId ,leaveType } = leaveDetails;
         const start = moment(startDate, "YYYY-MM-DD");
         const end = moment(endDate, "YYYY-MM-DD");
         const leaveDays = start.isSame(end, "day")
@@ -497,10 +533,27 @@ module.exports.leaveApproval = async (req, res) => {
         const updateLeave = await userLeave.update(updateLeaveDetails, {
           where: { userId },
         });
-        if (updateLeave)
-          return res
-            .status(200)
-            .json({ message: userMassage.success.leaveApproval });
+
+        const emailDetails = {
+          userId,
+          startDate,
+          endDate,
+          leaveType,
+          status: "Approved",
+        };
+
+        if (updateLeave) {
+          const sendMail = await sendLeaveUpdate(req, res, emailDetails);
+          if (sendMail.valid)
+            return res
+              .status(201)
+              .json({ message: userMassage.success.leaveUpdate });
+
+          return res.status(200).json({
+            message: userMassage.success.leaveApproval,
+            update: userMassage.success.leaveUpdateWithOutEmail,
+          });
+        }
       }
     }
 
@@ -515,12 +568,35 @@ module.exports.leaveReject = async (req, res) => {
   try {
     const id = req.params.id;
     const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
-
-    if (checkLeaveStatus.status == "Pending") {
+    const { status, userId, startDate, endDate, leaveType } =
+      checkLeaveStatus;
+    if (status == "Pending") {
       const leaveReject = await leaveRequest.update(
         { status: "Rejected" },
         { where: { id }, returning: true }
       );
+
+      const emailDetails = {
+        userId,
+        startDate,
+        endDate,
+        leaveType,
+        status: "Rejected",
+      };
+
+      if (leaveReject) {
+        const sendMail = await sendLeaveUpdate(req, res, emailDetails);
+        if (sendMail.valid)
+          return res
+            .status(201)
+            .json({ message: userMassage.success.leaveUpdate });
+
+        return res.status(200).json({
+          message: userMassage.success.leaveReject,
+          update: userMassage.success.leaveUpdateWithOutEmail,
+        });
+      }
+
       return res.status(200).json({ message: userMassage.success.leaveReject });
     }
     return res.status(200).json({ message: userMassage.error.leaveStatus });

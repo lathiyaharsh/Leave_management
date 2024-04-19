@@ -11,7 +11,10 @@ const {
   leaveReject,
   profile,
   allLeaveStatus,
-  editUser
+  editUser,
+  applyLeave,
+  userLeaveStatus,
+  leaveBalance,
 } = require("../controller/common");
 const verifyToken = require("../config/middleware");
 const { route } = require("./student");
@@ -26,6 +29,9 @@ routes.get("/leaveApproval/:id", leaveApproval);
 routes.get("/leaveReject/:id", leaveReject);
 routes.get("/profile", profile);
 routes.get("/allLeaveStatus", allLeaveStatus);
+routes.post("/applyLeave", applyLeave);
+routes.get("/userLeaveStatus", userLeaveStatus);
+routes.get("/leaveBalance", leaveBalance);
 
 routes.put("/editStudent/:id", uploadImgPath, editStudent);
 routes.put("/editUser", uploadImgPath, editUser);

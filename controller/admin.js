@@ -3,7 +3,7 @@ require("dotenv").config();
 const path = require("path");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const {Op , Sequelize} = require("sequelize");
+const { Op, Sequelize } = require("sequelize");
 const db = require("../config/sequelize");
 const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
@@ -12,61 +12,6 @@ const { user, imgPath, validateData } = require("../model/user");
 const { role, roleByName, leaveDetails } = require("../config/variables");
 const sendMail = require("../utility/sendMail");
 const moment = require("moment");
-
-// module.exports.login = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-//     const query = `SELECT * FROM admin WHERE email ='${email}';`;
-
-//     db.query(query, { type: Sequelize.QueryTypes.SELECT })
-//       .then(async (admins) => {
-//         if (admins.length == 0)
-//           return res
-//             .status(404)
-//             .json({ message: userMassage.error.userNotFound });
-
-//         const isValidPassword = await bcrypt.compare(
-//           password,
-//           admins[0].password
-//         );
-
-//         {
-//           const { id, name, email, roleId } = admins[0];
-//           const role = roleByName[roleId];
-//           const userDetails = {
-//             id,
-//             name,
-//             email,
-//             role,
-//           };
-
-//           const token = isValidPassword
-//             ? await jwt.sign({ userDetails }, process.env.SECRETKEY, {
-//                 expiresIn: "1h",
-//               })
-//             : null;
-
-//           if (isValidPassword) {
-//             res.cookie("jwt", token, { httpOnly: true });
-//             return res.status(200).json({
-//               message: userMassage.success.loginSuccess,
-//               token,
-//             });
-//           }
-//         }
-
-//         return res
-//           .status(400)
-//           .json({ message: userMassage.error.wrongPassword });
-//       })
-//       .catch((err) => {
-//         console.error("Error executing query:", err);
-//       });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({ message: userMassage.error.genericError });
-//   }
-// };
 
 module.exports.login = async (req, res) => {
   try {
@@ -210,7 +155,7 @@ module.exports.registerHod = async (req, res) => {
       email,
       password: req.body.password,
     };
-    
+
     const sendEmail = await sendMail(req, res, emailDetails);
     if (sendEmail.valid)
       return res
@@ -495,7 +440,6 @@ module.exports.logout = async (req, res) => {
 
 module.exports.leaveStatus = async (req, res) => {
   try {
-
     const { search } = req.query;
     if (search && search.trim()) {
       const searchResults = await leaveRequest.findAll({
@@ -508,13 +452,13 @@ module.exports.leaveStatus = async (req, res) => {
         include: [
           {
             model: user,
-            as: "requestedBy", 
-            attributes: ["id", "name", "email"],
+            as: "requestedBy",
+            attributes: ["id", "name", "email","roleId"],
           },
           {
             model: user,
-            as: "requestedTo", 
-            attributes: ["id", "name", "email"],
+            as: "requestedTo",
+            attributes: ["id", "name", "email","roleId"],
           },
         ],
       });
@@ -526,25 +470,28 @@ module.exports.leaveStatus = async (req, res) => {
     }
 
     const leaveStatus = await leaveRequest.findAll({
-      attributes: { 
+      attributes: {
         include: [
-          [Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`), 'leaveDifference']
-        ]
+          [
+            Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`),
+            "leaveDifference",
+          ],
+        ],
       },
       order: [["createdAt", "DESC"]],
       include: [
         {
           model: userLeave,
-          attributes: ["usedLeave","availableLeave"],
+          attributes: ["usedLeave", "availableLeave"],
         },
         {
           model: user,
-          as: "requestedBy", 
+          as: "requestedBy",
           attributes: ["id", "name", "email"],
         },
         {
           model: user,
-          as: "requestedTo", 
+          as: "requestedTo",
           attributes: ["id", "name", "email"],
         },
       ],
@@ -632,7 +579,7 @@ module.exports.leaveReport = async (req, res) => {
   try {
     const leaveReport = await userLeave.findAll({
       attributes: {
-        exclude: ["id", "academicYear", "createdAt", "updatedAt"], 
+        exclude: ["id", "academicYear", "createdAt", "updatedAt"],
       },
       order: [["usedLeave", "DESC"]],
       include: [
@@ -681,4 +628,3 @@ module.exports.removeUser = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
-

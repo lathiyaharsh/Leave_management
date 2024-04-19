@@ -45,7 +45,7 @@ const user = db.define(
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        len: [3, 80],
+        len: [3, 200],
       },
     },
     grNumber:{

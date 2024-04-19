@@ -5,16 +5,13 @@ const { Op, Sequelize } = require("sequelize");
 const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
 const leaveRequest = require("../model/leaveRequest");
-const { user, imgPath, validateData } = require("../model/user");
-const {
-  role,
-  roleByName,
-  leaveDetails,
-  pagination,
-} = require("../config/variables");
-const sendMail = require("../utility/sendMail");
+const { user, imgPath } = require("../model/user");
+const { role, roleByName, pagination } = require("../config/variables");
+
 const sendLeaveUpdate = require("../utility/sendLeaveUpdate");
 const moment = require("moment");
+const sendMail = require("../utility/sendMail");
+const validateDates = require("../utility/validateDates");
 
 const checkUser = async (email) => {
   try {
@@ -259,7 +256,7 @@ module.exports.leaveStatus = async (req, res) => {
         {
           model: user,
           as: "requestedBy",
-          attributes: ["id", "name", "email", "div"],
+          attributes: ["id", "name", "email", "div","roleId"],
         },
       ],
     });
@@ -308,12 +305,12 @@ module.exports.allLeaveStatus = async (req, res) => {
         {
           model: user,
           as: "requestedBy", // Use the correct alias for requestedBy association
-          attributes: ["id", "name", "email"],
+          attributes: ["id", "name", "email","roleId"],
         },
         {
           model: user,
           as: "requestedTo", // Use the correct alias for requestedTo association
-          attributes: ["id", "name", "email"],
+          attributes: ["id", "name", "email","roleId"],
         },
       ],
     });
@@ -384,12 +381,10 @@ module.exports.leaveApproval = async (req, res) => {
               .status(201)
               .json({ message: userMassage.success.leaveUpdate });
 
-          return res
-            .status(200)
-            .json({
-              message: userMassage.success.leaveApproval,
-              update: userMassage.success.leaveUpdateWithOutEmail,
-            });
+          return res.status(200).json({
+            message: userMassage.success.leaveApproval,
+            update: userMassage.success.leaveUpdateWithOutEmail,
+          });
         }
       }
     }
@@ -432,12 +427,10 @@ module.exports.leaveReject = async (req, res) => {
             .status(201)
             .json({ message: userMassage.success.leaveUpdate });
 
-        return res
-          .status(200)
-          .json({
-            message: userMassage.success.leaveReject,
-            update: userMassage.success.leaveUpdateWithOutEmail,
-          });
+        return res.status(200).json({
+          message: userMassage.success.leaveReject,
+          update: userMassage.success.leaveUpdateWithOutEmail,
+        });
       }
     }
     return res.status(200).json({ message: userMassage.error.leaveStatus });
@@ -540,6 +533,98 @@ module.exports.editUser = async (req, res) => {
       const errors = Object.values(error.errors).map((err) => err.message);
       return res.status(400).json({ errors });
     }
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.applyLeave = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const status = "Pending";
+    const checkLeave = await leaveRequest.findAndCountAll({
+      where: { userId, status },
+    });
+
+    if (checkLeave.count <= 2) {
+      const { startDate, endDate, leaveType, reason } = req.body;
+      const requestToId = req.body?.requestToId || 2;
+      const dates = {
+        startDate,
+        endDate,
+      };
+      const checkDates = await validateDates(dates);
+      if (!checkDates.valid) {
+        return res.status(400).json({ message: checkDates.message });
+      }
+      const leaveDetails = {
+        userId,
+        startDate,
+        endDate,
+        leaveType,
+        reason,
+        requestToId,
+      };
+
+      const createLeave = await leaveRequest.create(leaveDetails);
+      if (!createLeave)
+        return res
+          .status(400)
+          .json({ message: userMassage.error.leaveRequest });
+
+      return res
+        .status(201)
+        .json({ message: userMassage.success.leaveRequest });
+    }
+    return res
+      .status(201)
+      .json({ message: userMassage.error.leaveRequestLimit });
+  } catch (error) {
+    if (error.name === "SequelizeValidationError") {
+      const errors = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ errors });
+    }
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.userLeaveStatus = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const leaveStatus = await leaveRequest.findAll({
+      where: { userId },
+      attributes: { exclude: ["updatedAt"] },
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: user,
+          as: "requestedTo",
+          attributes: ["name", "email"],
+        },
+      ],
+    });
+    return res
+      .status(200)
+      .json({ leaveStatus, message: userMassage.success.leaveStatus });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
+module.exports.leaveBalance = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const leaveBalance = await userLeave.findOne({
+      where: { userId },
+      attributes: { exclude: ["id", "createdAt", "updatedAt"] },
+    });
+    return res
+      .status(200)
+      .json({ leaveBalance, message: userMassage.success.leaveBalance });
+  } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });
   }

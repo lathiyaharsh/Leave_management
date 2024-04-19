@@ -1,5 +1,3 @@
-
-
 module.exports = {
   userMassage: {
     success: {
@@ -17,11 +15,12 @@ module.exports = {
       leaveApproval: "Leave approved successfully",
       leaveReject: "Leave rejected successfully",
       studentList: "The list has been retrieved successfully.",
-      userDelete:"The user has been deleted successfully.",
-      otp:"The otp has been send successfully.",
-      otpVerify:"The otp successfully verified.",
-      leaveUpdate:"The leave update email send successfully.",
-      leaveUpdateWithOutEmail:"The leave updated successfully. but email not send successfully. please update to user",
+      userDelete: "The user has been deleted successfully.",
+      otp: "The otp has been send successfully.",
+      otpVerify: "The otp successfully verified.",
+      leaveUpdate: "The leave update email send successfully.",
+      leaveUpdateWithOutEmail:
+        "The leave updated successfully. but email not send successfully. please update to user",
     },
     error: {
       unauthorized: "Unauthorized - invalid token",
@@ -38,22 +37,20 @@ module.exports = {
       uploadImage: "The image upload was unsuccessful.",
       password: "Your password should be between 4-20 characters!",
       delete: "The user's details were not deleted.",
-      update:"The user's data was not updated successfully.",
+      update: "The user's data was not updated successfully.",
       leaveRequest: "The leave request was not sent successfully.",
-      leaveStatus:"Leave request has been already been approved or rejected.",
-      leaveStatusError:"You cannot modify the status of your leave.",
-      leaveRequestLimit:"You have already requested for a leave twice and I'm waiting for the approval.",
+      leaveStatus: "Leave request has been already been approved or rejected.",
+      leaveStatusError: "You cannot modify the status of your leave.",
+      leaveRequestLimit:
+        "You have already requested for a leave twice and I'm waiting for the approval.",
       studentList: "The student list has not been retrieved successfully.",
-      studentUpdateRole:"This individual is not a student.",
-      hodUpdateRole:"This individual is not a HOD .",
-      facultyUpdateRole:"This individual is not a faculty .",
-      userDelete:"The user has been not deleted successfully.",
-      otp:"The otp has not send successfully.",
-      otpVerify:"The otp not successfully verified.",
-      otpTime:"The otp has not send successfully. wait some time",
+      studentUpdateRole: "This individual is not a student.",
+      hodUpdateRole: "This individual is not a HOD .",
+      facultyUpdateRole: "This individual is not a faculty .",
+      userDelete: "The user has been not deleted successfully.",
+      otp: "The otp has not send successfully.",
+      otpVerify: "The otp not successfully verified.",
+      otpTime: "The otp has not send successfully. wait some time",
     },
   },
 };
-
-
-

@@ -427,7 +427,7 @@ module.exports.leaveApproval = async (req, res) => {
         };
 
         if (updateLeave) {
-          const sendMail = await sendLeaveUpdate(req, res, emailDetails);
+          const sendMail = await sendLeaveUpdate(emailDetails);
           if (sendMail.valid)
             return res
               .status(201)
@@ -473,7 +473,7 @@ module.exports.leaveReject = async (req, res) => {
         status: "Rejected",
       };
       if (leaveReject) {
-        const sendMail = await sendLeaveUpdate(req, res, emailDetails);
+        const sendMail = await sendLeaveUpdate(emailDetails);
         if (sendMail.valid)
           return res
             .status(201)

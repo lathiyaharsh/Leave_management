@@ -181,18 +181,19 @@ module.exports.register = async (req, res) => {
       return res.status(400).json({ message: userMassage.error.signUpError });
 
     const getUserId = await findUserId(email);
-    await this.setLeave(req, res, getUserId);
+    const setLeave = await this.setLeave(getUserId);
+
+    let userError = '';
+    if (!setLeave) userError = userMassage.error.userLeave;
+
     const emailDetails = {
       name,
       email,
       password: req.body.password,
     };
-    const sendEmail = await sendMail(req, res, emailDetails);
-    if (sendEmail.valid)
-      return res
-        .status(201)
-        .json({ message: userMassage.success.signUpSuccessWithEmail });
-    return res.status(201).json({ message: userMassage.success.signUpSuccess });
+    const sendEmail = await sendMail(emailDetails);
+    if (!sendEmail.valid) userError =+ userMassage.error.mail
+    return res.status(201).json({ message: userMassage.success.signUpSuccess , userError });
   } catch (error) {
     if (req.file) await deleteFile(req.file);
     if (error.name === "SequelizeValidationError") {
@@ -239,7 +240,7 @@ module.exports.profile = async (req, res) => {
   }
 };
 
-module.exports.setLeave = async (req, res, userId) => {
+module.exports.setLeave = async (userId) => {
   try {
     const {
       totalLeave,
@@ -261,6 +262,10 @@ module.exports.setLeave = async (req, res, userId) => {
     };
 
     const createUserLeave = await userLeave.create(studentLeave);
+    if(!createUserLeave){
+      return { valid: true}
+    }
+    return true;
   } catch (error) {
     console.log(error);
     return res.status(404).json({ message: userMassage.error.genericError });
@@ -457,7 +462,7 @@ module.exports.forgetPassword = async (req, res) => {
       if (!createOtp)
         return res.status(400).json({ message: userMassage.error.otp });
 
-      const sendOtpEmail = await sendOtpMail(req, res, otpDetails);
+      const sendOtpEmail = await sendOtpMail(otpDetails);
 
       if (sendOtpEmail.valid) setTimeout(deleteExpiredOTP, 60 * 3000);
       return res.status(201).json({ message: userMassage.success.otp });

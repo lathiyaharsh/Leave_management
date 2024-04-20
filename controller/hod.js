@@ -119,7 +119,7 @@ module.exports.registerFaculty = async (req, res) => {
       email,
       password: req.body.password,
     };
-    await sendMail(req, res, emailDetails);
+    await sendMail(emailDetails);
     return res.status(201).json({ message: userMassage.success.signUpSuccess });
   } catch (error) {
     if (req.file) await deleteFile(req.file);

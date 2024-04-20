@@ -3,7 +3,7 @@ const handlebars = require("handlebars");
 const path = require("path");
 const fs = require("fs");
 const { user } = require("../model/user");
-const sendLeaveUpdate = async (req, res, emailDetails) => {
+const sendLeaveUpdate = async (emailDetails) => {
   try {
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",

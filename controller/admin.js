@@ -105,19 +105,20 @@ module.exports.registerHod = async (req, res) => {
       return res.status(400).json({ message: userMassage.error.signUpError });
 
     const getUserId = await findUserId(email);
-    await this.setLeaveHod(req, res, getUserId);
+    const setLeave = await this.setLeaveHod(getUserId);
+    let userError = '';
+    if (!setLeave) userError = userMassage.error.userLeave;
+    
     const emailDetails = {
       name,
       email,
       password: req.body.password,
     };
 
-    const sendEmail = await sendMail(req, res, emailDetails);
-    if (sendEmail.valid)
-      return res
-        .status(201)
-        .json({ message: userMassage.success.signUpSuccessWithEmail });
-    return res.status(201).json({ message: userMassage.success.signUpSuccess });
+    const sendEmail = await sendMail(emailDetails);
+    if (!sendEmail.valid) userError =+ userMassage.error.mail
+     
+    return res.status(201).json({ message: userMassage.success.signUpSuccess , userError});
   } catch (error) {
     if (req.file) await deleteFile(req.file);
     if (error.name === "SequelizeValidationError") {
@@ -129,7 +130,7 @@ module.exports.registerHod = async (req, res) => {
   }
 };
 
-module.exports.setLeaveHod = async (req, res, userId) => {
+module.exports.setLeaveHod = async (userId) => {
   try {
     const {
       totalLeave,
@@ -151,9 +152,12 @@ module.exports.setLeaveHod = async (req, res, userId) => {
     };
 
     const createUserLeave = await userLeave.create(studentLeave);
+    if(!createUserLeave){
+      return { valid: true}
+    }
+    return true;
   } catch (error) {
     console.log(error);
-    return res.status(404).json({ message: userMassage.error.genericError });
   }
 };
 
@@ -277,19 +281,20 @@ module.exports.registerFaculty = async (req, res) => {
       return res.status(400).json({ message: userMassage.error.signUpError });
 
     const getUserId = await findUserId(email);
-    await this.setLeaveFaculty(req, res, getUserId);
+    const setLeave = await this.setLeaveFaculty(getUserId);
+
+    let userError = '';
+    if (!setLeave) userError = userMassage.error.userLeave;
 
     const emailDetails = {
       name,
       email,
       password: req.body.password,
     };
-    const sendEmail = await sendMail(req, res, emailDetails);
-    if (sendEmail.valid)
-      return res
-        .status(201)
-        .json({ message: userMassage.success.signUpSuccessWithEmail });
-    return res.status(201).json({ message: userMassage.success.signUpSuccess });
+    const sendEmail = await sendMail(emailDetails);
+    if (!sendEmail.valid) userError =+ userMassage.error.mail
+
+    return res.status(201).json({ message: userMassage.success.signUpSuccess , userError});
   } catch (error) {
     if (req.file) await deleteFile(req.file);
     if (error.name === "SequelizeValidationError") {
@@ -301,7 +306,7 @@ module.exports.registerFaculty = async (req, res) => {
   }
 };
 
-module.exports.setLeaveFaculty = async (req, res, userId) => {
+module.exports.setLeaveFaculty = async (userId) => {
   try {
     const {
       totalLeave,
@@ -323,9 +328,12 @@ module.exports.setLeaveFaculty = async (req, res, userId) => {
     };
 
     const createUserLeave = await userLeave.create(studentLeave);
+    if(!createUserLeave){
+      return { valid: true}
+    }
+    return true;
   } catch (error) {
     console.log(error);
-    return res.status(404).json({ message: userMassage.error.genericError });
   }
 };
 
@@ -511,7 +519,7 @@ module.exports.leaveApproval = async (req, res) => {
         };
 
         if (updateLeave) {
-          const sendMail = await sendLeaveUpdate(req, res, emailDetails);
+          const sendMail = await sendLeaveUpdate(emailDetails);
           if (sendMail.valid)
             return res
               .status(201)
@@ -552,7 +560,7 @@ module.exports.leaveReject = async (req, res) => {
       };
 
       if (leaveReject) {
-        const sendMail = await sendLeaveUpdate(req, res, emailDetails);
+        const sendMail = await sendLeaveUpdate(emailDetails);
         if (sendMail.valid)
           return res
             .status(201)

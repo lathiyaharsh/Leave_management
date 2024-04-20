@@ -3,7 +3,6 @@ const cookieParser = require("cookie-parser");
 const express = require("express");
 const path = require("path");
 const port = process.env.PORT;
-const leaveMails = require("./utility/sendLeaveMail");
 const passport = require("passport");
 const GoogleStrategy = require("./config/googleStrategy");
 const session = require("express-session");

@@ -21,6 +21,7 @@ module.exports = {
       leaveUpdate: "The leave update email was sent successfully.",
       leaveUpdateWithOutEmail:
         "The leave was updated successfully. but the email was not sent successfully. please update to user",
+      userLeave:"User leave created successfully.",
     },
     error: {
       unauthorized: "Unauthorized - invalid token",
@@ -52,6 +53,8 @@ module.exports = {
       otpVerify: "The OTP not successfully verified.",
       otpTime:
         "The OTP has not been sent successfully.please wait for some time.",
+      userLeave:"User leave not created successfully.",
+      mail:"mail not sent successfully.",
     },
   },
 };

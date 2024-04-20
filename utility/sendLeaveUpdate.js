@@ -15,9 +15,7 @@ const sendLeaveUpdate = async (emailDetails) => {
       },
     });
 
-    const viewsDirectory = path.resolve(__dirname, "../views");
-    const filePath = path.join(viewsDirectory, "sendLeaveUpdate.hbs");
-
+    const filePath = "views/sendLeaveUpdate.hbs";
     const source = fs.readFileSync(filePath, "utf-8");
     const template = handlebars.compile(source);
 
@@ -36,11 +34,11 @@ const sendLeaveUpdate = async (emailDetails) => {
     });
 
     const mail = await transporter.sendMail({
-      from: process.env.EMAILPASSWORD, // sender address
-      to: `${email}`, // list of receivers
-      subject: "Welcome To LMS", // Subject line
-      text: "Hello Manager ", // plain text body
-      html: htmlToSend, // html body
+      from: process.env.EMAILPASSWORD,
+      to: email,
+      subject: "Welcome To LMS",
+      text: "Hello Manager ",
+      html: htmlToSend,
     });
 
     if (mail) return { valid: true, res: "Mail send successfully." };

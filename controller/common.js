@@ -378,70 +378,70 @@ module.exports.leaveStatus = async (req, res) => {
 module.exports.leaveApproval = async (req, res) => {
   try {
     const id = req.params.id;
-    const userId = req.user.id;
+    const loginUser = req.user.id;
     const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
     const { status, requestToId } = checkLeaveStatus;
-    if (requestToId != userId)
+    if (requestToId != loginUser)
       return res.status(400).json({
         message: userMassage.error.leaveStatusError,
       });
 
-    if (status == "Pending") {
-      const leaveApproval = await leaveRequest.update(
-        { status: "Approved" },
-        { where: { id }, returning: true }
-      );
-      if (leaveApproval) {
-        const leaveDetails = await leaveRequest.findOne({ where: { id } });
-        const { startDate, endDate, userId, leaveType } = leaveDetails;
-        const start = moment(startDate, "YYYY-MM-DD");
-        const end = moment(endDate, "YYYY-MM-DD");
-        const leaveDays = start.isSame(end, "day")
-          ? 0.5
-          : end.diff(start, "days") + 1;
-        const leaveData = await userLeave.findOne({ where: { userId } });
-        const availableLeave = leaveData.availableLeave - leaveDays;
-        const usedLeave = Number(leaveData.usedLeave) + Number(leaveDays);
-        const remainingDays = leaveData.totalWorkingDays - usedLeave;
-        const attendancePercentage = (
-          (remainingDays * 100) /
-          leaveData.totalWorkingDays
-        ).toFixed(2);
+    if (status != "Pending")
+      return res.status(400).json({ message: userMassage.error.leaveStatus });
 
-        const updateLeaveDetails = {
-          availableLeave,
-          usedLeave,
-          attendancePercentage,
-        };
+    const leaveApproval = await leaveRequest.update(
+      { status: "Approved" },
+      { where: { id }, returning: true }
+    );
 
-        const updateLeave = await userLeave.update(updateLeaveDetails, {
-          where: { userId },
-        });
+    if (!leaveApproval)
+      return res.status(400).json({ message: userMassage.error.leaveApproval });
 
-        const emailDetails = {
-          userId,
-          startDate,
-          endDate,
-          leaveType,
-          status: "Approved",
-        };
+    const leaveDetails = await leaveRequest.findOne({ where: { id } });
+    const { startDate, endDate, userId, leaveType } = leaveDetails;
+    const start = moment(startDate, "YYYY-MM-DD");
+    const end = moment(endDate, "YYYY-MM-DD");
+    const leaveDays = start.isSame(end, "day")
+      ? 0.5
+      : end.diff(start, "days") + 1;
+    const leaveData = await userLeave.findOne({ where: { userId } });
+    const availableLeave = leaveData.availableLeave - leaveDays;
+    const usedLeave = Number(leaveData.usedLeave) + Number(leaveDays);
+    const remainingDays = leaveData.totalWorkingDays - usedLeave;
+    const attendancePercentage = (
+      (remainingDays * 100) /
+      leaveData.totalWorkingDays
+    ).toFixed(2);
 
-        if (updateLeave) {
-          const sendMail = await sendLeaveUpdate(emailDetails);
-          if (sendMail.valid)
-            return res
-              .status(201)
-              .json({ message: userMassage.success.leaveUpdate });
+    const updateLeaveDetails = {
+      availableLeave,
+      usedLeave,
+      attendancePercentage,
+    };
 
-          return res.status(200).json({
-            message: userMassage.success.leaveApproval,
-            update: userMassage.success.leaveUpdateWithOutEmail,
-          });
-        }
-      }
-    }
+    const updateLeave = await userLeave.update(updateLeaveDetails, {
+      where: { userId },
+    });
 
-    return res.status(200).json({ message: userMassage.error.leaveStatus });
+    let userError = "";
+
+    if (!updateLeave) userError = +userMassage.error.userLeaveRec;
+
+    const emailDetails = {
+      userId,
+      startDate,
+      endDate,
+      leaveType,
+      status: "Approved",
+    };
+
+    const sendMail = await sendLeaveUpdate(emailDetails);
+    if (!sendMail.valid) userError = +userMassage.error.mail;
+
+    return res.status(200).json({
+      message: userMassage.success.leaveApproval,
+      userError,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });
@@ -459,33 +459,34 @@ module.exports.leaveReject = async (req, res) => {
       return res.status(400).json({
         message: userMassage.error.leaveStatusError,
       });
-    if (status == "Pending") {
-      const leaveReject = await leaveRequest.update(
-        { status: "Rejected" },
-        { where: { id }, returning: true }
-      );
 
-      const emailDetails = {
-        userId,
-        startDate,
-        endDate,
-        leaveType,
-        status: "Rejected",
-      };
-      if (leaveReject) {
-        const sendMail = await sendLeaveUpdate(emailDetails);
-        if (sendMail.valid)
-          return res
-            .status(201)
-            .json({ message: userMassage.success.leaveUpdate });
+    if (status != "Pending")
+      return res.status(200).json({ message: userMassage.error.leaveStatus });
 
-        return res.status(200).json({
-          message: userMassage.success.leaveReject,
-          update: userMassage.success.leaveUpdateWithOutEmail,
-        });
-      }
-    }
-    return res.status(200).json({ message: userMassage.error.leaveStatus });
+    const leaveReject = await leaveRequest.update(
+      { status: "Rejected" },
+      { where: { id }, returning: true }
+    );
+    if (!leaveReject)
+      return res.status(400).json({
+        message: userMassage.error.leaveReject,
+      });
+    const emailDetails = {
+      userId,
+      startDate,
+      endDate,
+      leaveType,
+      status: "Rejected",
+    };
+
+    const sendMail = await sendLeaveUpdate(emailDetails);
+    if (sendMail.valid)
+      return res.status(201).json({ message: userMassage.success.leaveUpdate });
+
+    return res.status(200).json({
+      message: userMassage.success.leaveReject,
+      update: userMassage.success.leaveUpdateWithOutEmail,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });

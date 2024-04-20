@@ -47,9 +47,7 @@ const sendReminderEmail = async (PendingLeaves) => {
 
       const userDetail = await findUser(leave.requestToId);
 
-      const viewsDirectory = path.resolve(__dirname, "../views");
-      const filePath = path.join(viewsDirectory, "leaveMail.hbs");
-
+      const filePath = "views/leaveMail.hbs";
       const source = fs.readFileSync(filePath, "utf-8");
       const template = handlebars.compile(source);
 
@@ -68,11 +66,11 @@ const sendReminderEmail = async (PendingLeaves) => {
       });
 
       const mail = await transporter.sendMail({
-        from: process.env.EMAILFROM, // sender address
-        to: `${userDetail.email}`, // list of receivers
-        subject: "Leave Request", // Subject line
-        text: "Hello Manager ", // plain text body
-        html: emailTemp, // html body
+        from: process.env.EMAILFROM,
+        to: userDetail.email,
+        subject: "Leave Request",
+        text: "Hello Manager ",
+        html: emailTemp,
       });
     }
   } catch (error) {
@@ -88,3 +86,13 @@ cron.schedule("0 17 * * *", async () => {
     console.log(error);
   }
 });
+
+cron.schedule("0 9 * * *", async () => {
+  try {
+    const PendingLeaves = await getPendingLeave();
+    await sendReminderEmail(PendingLeaves);
+  } catch (error) {
+    console.log(error);
+  }
+});
+

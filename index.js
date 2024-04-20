@@ -15,6 +15,7 @@ app.use(express.urlencoded());
 app.use(express.json());
 app.use(cookieParser());
 
+app.set('views',path.join(__dirname,'views'));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(

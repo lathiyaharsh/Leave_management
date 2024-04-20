@@ -192,7 +192,7 @@ module.exports.register = async (req, res) => {
       password: req.body.password,
     };
     const sendEmail = await sendMail(emailDetails);
-    if (!sendEmail.valid) userError =+ userMassage.error.mail
+    if (!sendEmail.valid) userError += userMassage.error.mail
     return res.status(201).json({ message: userMassage.success.signUpSuccess , userError });
   } catch (error) {
     if (req.file) await deleteFile(req.file);

@@ -49,7 +49,6 @@ module.exports.registerFaculty = async (req, res) => {
   try {
     if (!req.body && !req.file)
       return res.status(400).json({ message: userMassage.error.fillDetails });
-
     const { error, value } = validateData(req.body);
 
     if (error) {
@@ -91,7 +90,6 @@ module.exports.registerFaculty = async (req, res) => {
       const baseUrl = `${req.protocol}://${req.get("host")}`;
       image = baseUrl + imgPath + "/" + req.file.filename;
     }
-    console.log(image.length);
 
     const newUser = {
       name,
@@ -113,14 +111,22 @@ module.exports.registerFaculty = async (req, res) => {
       return res.status(400).json({ message: userMassage.error.signUpError });
 
     const getUserId = await findUserId(email);
-    await this.setLeaveFaculty(req, res, getUserId);
+    const setLeave = await this.setLeaveFaculty(getUserId);
+
+    let userError = "";
+    if (!setLeave) userError = userMassage.error.userLeave;
+
     const emailDetails = {
       name,
       email,
       password: req.body.password,
     };
-    await sendMail(emailDetails);
-    return res.status(201).json({ message: userMassage.success.signUpSuccess });
+    const sendEmail = await sendMail(emailDetails);
+    if (!sendEmail.valid) userError += userMassage.error.mail;
+
+    return res
+      .status(201)
+      .json({ message: userMassage.success.signUpSuccess, userError });
   } catch (error) {
     if (req.file) await deleteFile(req.file);
     if (error.name === "SequelizeValidationError") {
@@ -132,7 +138,7 @@ module.exports.registerFaculty = async (req, res) => {
   }
 };
 
-module.exports.setLeaveFaculty = async (req, res, userId) => {
+module.exports.setLeaveFaculty = async (userId) => {
   try {
     const {
       totalLeave,
@@ -141,7 +147,7 @@ module.exports.setLeaveFaculty = async (req, res, userId) => {
       academicYear,
       totalWorkingDays,
       attendancePercentage,
-    } = leaveDetails.hod;
+    } = leaveDetails.faculty;
 
     const studentLeave = {
       userId,
@@ -154,9 +160,12 @@ module.exports.setLeaveFaculty = async (req, res, userId) => {
     };
 
     const createUserLeave = await userLeave.create(studentLeave);
+    if (!createUserLeave) {
+      return { valid: true };
+    }
+    return true;
   } catch (error) {
     console.log(error);
-    return res.status(404).json({ message: userMassage.error.genericError });
   }
 };
 

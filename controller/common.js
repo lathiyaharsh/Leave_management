@@ -425,7 +425,7 @@ module.exports.leaveApproval = async (req, res) => {
 
     let userError = "";
 
-    if (!updateLeave) userError = +userMassage.error.userLeaveRec;
+    if (!updateLeave) userError += userMassage.error.userLeaveRec;
 
     const emailDetails = {
       userId,
@@ -436,7 +436,7 @@ module.exports.leaveApproval = async (req, res) => {
     };
 
     const sendMail = await sendLeaveUpdate(emailDetails);
-    if (!sendMail.valid) userError = +userMassage.error.mail;
+    if (!sendMail.valid) userError += userMassage.error.mail;
 
     return res.status(200).json({
       message: userMassage.success.leaveApproval,

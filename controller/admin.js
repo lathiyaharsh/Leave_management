@@ -7,7 +7,7 @@ const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
 const leaveRequest = require("../model/leaveRequest");
 const { user, imgPath, validateData } = require("../model/user");
-const { role, leaveDetails } = require("../config/variables");
+const { role, leaveDetails , pagination} = require("../config/variables");
 const sendMail = require("../utility/sendMail");
 const moment = require("moment");
 const sendLeaveUpdate = require("../utility/sendLeaveUpdate");
@@ -396,7 +396,7 @@ module.exports.logout = async (req, res) => {
 
 module.exports.leaveStatus = async (req, res) => {
   try {
-    const { search, userRole } = req.query;
+    const { search, userRole , page , limit } = req.query;
     let whereCondition = {};
 
     if (search && search.trim()) {
@@ -409,6 +409,19 @@ module.exports.leaveStatus = async (req, res) => {
       const findRole = role[userRole];
       whereCondition.roleId = findRole;
     }
+
+    const pageCount = page || pagination.pageCount;
+    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
+    const totalLeave = await leaveRequest.count({where:whereCondition});
+    const maxPage = totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
+
+    if (pageCount > maxPage)
+    return res
+      .status(400)
+      .json({ message: `There are only ${maxPage} page` });
+
+    const skip = parseInt((pageCount - 1) * limitDoc);
+
 
     const searchResults = await leaveRequest.findAll({
       attributes: {
@@ -437,6 +450,8 @@ module.exports.leaveStatus = async (req, res) => {
           attributes: ["id", "name", "email", "roleId"],
         },
       ],
+      offset: skip,
+      limit: limitDoc,
     });
 
     return res.status(200).json({
@@ -560,6 +575,19 @@ module.exports.leaveReject = async (req, res) => {
 
 module.exports.leaveReport = async (req, res) => {
   try {
+    const { page , limit } = req.query;
+    const pageCount = page || pagination.pageCount;
+    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
+    const totalLeave = await userLeave.count({});
+    const maxPage = totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
+
+    if (pageCount > maxPage)
+    return res
+      .status(400)
+      .json({ message: `There are only ${maxPage} page` });
+
+    const skip = parseInt((pageCount - 1) * limitDoc);
+ 
     const leaveReport = await userLeave.findAll({
       attributes: {
         exclude: ["id", "academicYear", "createdAt", "updatedAt"],
@@ -571,6 +599,8 @@ module.exports.leaveReport = async (req, res) => {
           attributes: ["name", "email", "roleId"],
         },
       ],
+      offset: skip,
+      limit: limitDoc,
     });
 
     return res

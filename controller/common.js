@@ -1,7 +1,7 @@
 const fs = require("fs");
 require("dotenv").config();
 const path = require("path");
-const { Op, Sequelize } = require("sequelize");
+const { Op, Sequelize, where } = require("sequelize");
 const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
 const leaveRequest = require("../model/leaveRequest");
@@ -224,6 +224,69 @@ module.exports.facultyList = async (req, res) => {
   }
 };
 
+module.exports.allLeaveStatus = async (req, res) => {
+  try {
+    const { search, userRole ,limit , page} = req.query;
+    let whereCondition = {};
+
+    if (search && search.trim()) {
+      whereCondition.status = {
+        [Op.like]: `${search}%`,
+      };
+    }
+
+    if (userRole) {
+      const findRole = role[userRole];
+      whereCondition.roleId = findRole;
+    }
+
+    const pageCount = page || pagination.pageCount;
+    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
+    const totalLeave = await leaveRequest.count({where:whereCondition});
+    const maxPage = totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
+
+    if (pageCount > maxPage)
+    return res
+      .status(400)
+      .json({ message: `There are only ${maxPage} page` });
+
+    const skip = parseInt((pageCount - 1) * limitDoc);
+
+
+    const searchResults = await leaveRequest.findAll({
+      where: whereCondition,
+      order: [["createdAt", "DESC"]],
+      include: [
+        {
+          model: userLeave,
+          attributes: ["usedLeave", "availableLeave"],
+        },
+        {
+          model: user,
+          as: "requestedBy",
+          attributes: ["id", "name", "email", "roleId"],
+        },
+        {
+          model: user,
+          as: "requestedTo",
+          attributes: ["id", "name", "email", "roleId"],
+        },
+      ],
+      offset: skip,
+      limit: limitDoc,
+    });
+
+    return res.status(200).json({
+      message: userMassage.success.studentList,
+      searchResults,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
+
 module.exports.editStudent = async (req, res) => {
   try {
     const { id } = req.params;
@@ -307,53 +370,6 @@ module.exports.leaveStatus = async (req, res) => {
     return res
       .status(200)
       .json({ leaveStatus, message: userMassage.success.leaveStatus });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: userMassage.error.genericError });
-  }
-};
-
-module.exports.allLeaveStatus = async (req, res) => {
-  try {
-    const { search, userRole } = req.query;
-    let whereCondition = {};
-
-    if (search && search.trim()) {
-      whereCondition.status = {
-        [Op.like]: `${search}%`,
-      };
-    }
-
-    if (userRole) {
-      const findRole = role[userRole];
-      whereCondition.roleId = findRole;
-    }
-
-    const searchResults = await leaveRequest.findAll({
-      where: whereCondition,
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: userLeave,
-          attributes: ["usedLeave", "availableLeave"],
-        },
-        {
-          model: user,
-          as: "requestedBy",
-          attributes: ["id", "name", "email", "roleId"],
-        },
-        {
-          model: user,
-          as: "requestedTo",
-          attributes: ["id", "name", "email", "roleId"],
-        },
-      ],
-    });
-
-    return res.status(200).json({
-      message: userMassage.success.studentList,
-      searchResults,
-    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });

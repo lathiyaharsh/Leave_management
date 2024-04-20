@@ -7,7 +7,6 @@ const { userMassage } = require("../config/message");
 const { user, imgPath, validateData } = require("../model/user");
 const { role, leaveDetails } = require("../config/variables");
 const sendMail = require("../utility/sendMail");
-const moment = require("moment");
 
 module.exports.logout = async (req, res) => {
   try {

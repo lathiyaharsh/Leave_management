@@ -4,8 +4,8 @@ const imgPath = "/uploads/user";
 const { DataTypes } = require("sequelize");
 const db = require("../config/sequelize");
 const role = require("./role");
-const Joi = require('joi');
-const validator = require('validator');
+const Joi = require("joi");
+const validator = require("validator");
 
 const user = db.define(
   "user",
@@ -48,27 +48,27 @@ const user = db.define(
         len: [3, 200],
       },
     },
-    grNumber:{
+    grNumber: {
       type: DataTypes.STRING,
     },
-    phone:{
-        type: DataTypes.STRING,
-        allowNull: false,
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    address:{
-        type: DataTypes.STRING,
-        allowNull: false,
+    address: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    department:{
-        type: DataTypes.STRING,
+    department: {
+      type: DataTypes.STRING,
     },
-    div:{
-        type: DataTypes.STRING,
+    div: {
+      type: DataTypes.STRING,
     },
-    roleId:{
-        type:DataTypes.INTEGER,
-        allowNull: false,
-    }
+    roleId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
     indexes: [
@@ -107,6 +107,6 @@ const imageStorage = multer.diskStorage({
 });
 
 const uploadImgPath = multer({ storage: imageStorage }).single("image");
-user.belongsTo(role,{onDelete:"CASCADE", foreignKey:"roleId"})
+user.belongsTo(role, { onDelete: "CASCADE", foreignKey: "roleId" });
 
-module.exports = { user, uploadImgPath, imgPath , validateData};
+module.exports = { user, uploadImgPath, imgPath, validateData };

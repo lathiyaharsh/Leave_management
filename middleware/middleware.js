@@ -36,11 +36,9 @@ const verifyToken = (role) => {
           userRole = roleByName[userDetails.roleId];
           if (!role.includes(userRole)) {
             if (req.file) await fs.unlinkSync(req.file.path);
-            return res
-              .status(403)
-              .json({
-                message: `Forbidden: ${role.join(" or ")} access required`,
-              });
+            return res.status(403).json({
+              message: `Forbidden: ${role.join(" or ")} access required`,
+            });
           }
         }
 

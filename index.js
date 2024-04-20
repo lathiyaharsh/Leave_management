@@ -21,7 +21,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(
   session({
     name: "leaveManagement",
-    secret: "leaveManagement",
+    secret: process.env.SECRETKEY,
     resave: false,
     saveUninitialized: false,
   })

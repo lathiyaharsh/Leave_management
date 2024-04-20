@@ -226,7 +226,7 @@ module.exports.facultyList = async (req, res) => {
 
 module.exports.allLeaveStatus = async (req, res) => {
   try {
-    const { search, userRole ,limit , page} = req.query;
+    const { search, userRole, limit, page } = req.query;
     let whereCondition = {};
 
     if (search && search.trim()) {
@@ -242,16 +242,16 @@ module.exports.allLeaveStatus = async (req, res) => {
 
     const pageCount = page || pagination.pageCount;
     const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
-    const totalLeave = await leaveRequest.count({where:whereCondition});
-    const maxPage = totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
+    const totalLeave = await leaveRequest.count({ where: whereCondition });
+    const maxPage =
+      totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
 
     if (pageCount > maxPage)
-    return res
-      .status(400)
-      .json({ message: `There are only ${maxPage} page` });
+      return res
+        .status(400)
+        .json({ message: `There are only ${maxPage} page` });
 
     const skip = parseInt((pageCount - 1) * limitDoc);
-
 
     const searchResults = await leaveRequest.findAll({
       where: whereCondition,
@@ -285,7 +285,6 @@ module.exports.allLeaveStatus = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
-
 
 module.exports.editStudent = async (req, res) => {
   try {

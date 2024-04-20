@@ -9,17 +9,25 @@ const nodemailer = require("nodemailer");
 const { roleByName } = require("../config/variables");
 
 const getPendingLeave = async () => {
-  const PendingLeaves = await leave.findAll({ where: { status: "Pending" } });
-  return PendingLeaves;
+  try {
+    const PendingLeaves = await leave.findAll({ where: { status: "Pending" } });
+    return PendingLeaves;
+  } catch (error) {
+    console.log(error);
+  }
 };
 const findUser = async (requestToId) => {
-  const userDetails = await user.findOne({
-    where: { id: requestToId },
-    attributes: {
-      exclude: ["password"],
-    },
-  });
-  return userDetails;
+  try {
+    const userDetails = await user.findOne({
+      where: { id: requestToId },
+      attributes: {
+        exclude: ["password"],
+      },
+    });
+    return userDetails;
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const sendReminderEmail = async (PendingLeaves) => {
@@ -71,7 +79,12 @@ const sendReminderEmail = async (PendingLeaves) => {
     console.log(error);
   }
 };
+
 cron.schedule("0 17 * * *", async () => {
-  const PendingLeaves = await getPendingLeave();
-  await sendReminderEmail(PendingLeaves);
+  try {
+    const PendingLeaves = await getPendingLeave();
+    await sendReminderEmail(PendingLeaves);
+  } catch (error) {
+    console.log(error);
+  }
 });

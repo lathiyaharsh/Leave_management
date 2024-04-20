@@ -39,10 +39,10 @@ const leaveRequest = db.define("leaveRequest", {
     defaultValue: "Pending",
     allowNull: false,
   },
-  roleId:{
-    type:DataTypes.INTEGER,
+  roleId: {
+    type: DataTypes.INTEGER,
     allowNull: false,
-  }
+  },
 });
 
 leaveRequest.belongsTo(user, {

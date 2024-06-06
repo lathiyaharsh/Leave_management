@@ -8,6 +8,7 @@ const fs = require("fs");
 const verifyToken = (role) => {
   return async (req, res, next) => {
     const token = req.cookies["jwt"];
+    
     if (!token)
       return res.status(403).json({ message: userMassage.error.tokenMissing });
 
@@ -19,6 +20,7 @@ const verifyToken = (role) => {
             .json({ message: userMassage.error.unauthorized });
 
         const userDetails = await getUser(decoded.userDetails);
+    
 
         if (userDetails == null)
           return res
@@ -32,6 +34,7 @@ const verifyToken = (role) => {
         //     return res.status(403).json({ message: `Forbidden: ${role} access required` });
         //   }
         // }
+
         if (role && role.length > 0) {
           userRole = roleByName[userDetails.roleId];
           if (!role.includes(userRole)) {

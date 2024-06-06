@@ -3,6 +3,7 @@ const routes = express.Router();
 const passport = require("passport");
 
 routes.use("/user", require("./student"));
+routes.use("/users", require("./user"));
 routes.use("/manage", require("./common"));
 routes.get(
   "/google",

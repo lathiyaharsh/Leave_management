@@ -14,7 +14,7 @@ const {
   forgetPassword,
   verifyOtp,
   resetPassword,
-} = require("../controller/user");
+} = require("../controller/student");
 
 routes.post("/login", login);
 routes.post("/register", uploadImgPath, register);

@@ -6,10 +6,15 @@ const port = process.env.PORT;
 const passport = require("passport");
 const GoogleStrategy = require("./config/googleStrategy");
 const session = require("express-session");
+const cors = require("cors");
 
 require("./model/index");
 
 const app = express();
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
 app.use(express.urlencoded());
 app.use(express.json());

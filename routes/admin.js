@@ -15,9 +15,9 @@ const {
 } = require("../controller/admin");
 
 
+routes.get("/leaveStatus", leaveStatus);
 routes.use(verifyToken(["admin"]));
 
-routes.get("/leaveStatus", leaveStatus);
 routes.get("/leaveApproval/:id", leaveApproval);
 routes.get("/leaveReject/:id", leaveReject);
 routes.get("/leaveReport", leaveReport);

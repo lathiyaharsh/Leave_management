@@ -94,7 +94,7 @@ module.exports.login = async (req, res) => {
 
       const token = isValidPassword
         ? await jwt.sign({ userDetails }, process.env.SECRETKEY, {
-            expiresIn: "1h",
+            expiresIn: "1d",
           })
         : null;
 

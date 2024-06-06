@@ -375,7 +375,7 @@ module.exports.leaveStatus = async (req, res) => {
   }
 };
 
-module.exports.leaveApproval = async (req, res) => {module.exports.registerFaculty = async (req, res) => {
+module.exports.registerFaculty = async (req, res) => {
   try {
     if (!req.body && !req.file)
       return res.status(400).json({ message: userMassage.error.fillDetails });
@@ -489,6 +489,7 @@ module.exports.setLeaveFaculty = async ( userId) => {
     return res.status(404).json({ message: userMassage.error.genericError });
   }
 };
+module.exports.leaveApproval = async (req, res) => {
   try {
     const id = req.params.id;
     const loginUser = req.user.id;

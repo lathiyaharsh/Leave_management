@@ -1,22 +1,23 @@
+const fs = require("fs");
 const { userMassage } = require("../config/message");
 const { roleByName } = require("../config/variables");
-const fs = require("fs");
 require("dotenv").config();
 const path = require("path");
 const bcrypt = require("bcrypt");
-const { Op, Sequelize } = require("sequelize");
-const userLeave = require("../model/userLeave");
-const { user, imgPath, validateData } = require("../model/user");
+const { Op } = require("sequelize");
+const { imgPath, validateData } = require("../model/user");
 const { role, leaveDetails, pagination } = require("../config/variables");
 const sendMail = require("../utility/sendMail");
-const moment = require("moment");
-const sendLeaveUpdate = require("../utility/sendLeaveUpdate");
+
 const {
   checkUser,
   deleteFile,
-  findUserId,
+  findUser,
+  findAllUsers,
+  countUsers,
   deleteUser,
   createUser,
+  updateUser,
 } = require("../service/user");
 const { createUserLeave } = require("../service/userLeave");
 
@@ -73,7 +74,7 @@ module.exports.removeUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleteImage = await user.findByPk(id);
+    const deleteImage = await findUser({ id });
     const { image } = deleteImage;
     const parsedUrl = new URL(image);
     const imagePath = parsedUrl.pathname;
@@ -167,7 +168,6 @@ module.exports.register = async (req, res) => {
     };
 
     const createNewUser = await createUser(newUser);
-    //const createUser = await user.create(newUser);
 
     if (!createNewUser)
       return res.status(400).json({ message: userMassage.error.signUpError });
@@ -192,11 +192,11 @@ module.exports.register = async (req, res) => {
     };
 
     let userError = "";
-    //const createUserLeave = await userLeave.create(studentLeave);
     const createNewUserLeave = await createUserLeave(studentLeave);
-    if (!createNewUserLeave) {
-      userError = userMassage.error.userLeave;
-    }
+    !createNewUserLeave
+      ? (userError += userMassage.error.userLeave)
+      : (userError += userMassage.success.userLeave);
+
     const emailDetails = {
       name,
       email,
@@ -208,7 +208,7 @@ module.exports.register = async (req, res) => {
       : (userError += userMassage.success.mail);
     return res
       .status(201)
-      .json({ message: userMassage.success.signUpSuccess, mail: userError });
+      .json({ message: userMassage.success.signUpSuccess, result: userError });
   } catch (error) {
     if (req.file) await deleteFile(req.file);
     if (error.name === "SequelizeValidationError") {
@@ -223,7 +223,11 @@ module.exports.register = async (req, res) => {
 module.exports.editUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const userDetails = await user.findByPk(id);
+    // const userDetails = await user.findByPk(id);
+    const userDetails = await findUser({ id });
+
+    if (!userDetails)
+      return res.status(400).json({ message: userMassage.error.userNotFound });
     const { image, email } = userDetails;
     const userRoleId = userDetails.roleId;
     const requesterRoleId = req.user.roleId;
@@ -254,6 +258,7 @@ module.exports.editUser = async (req, res) => {
         });
       }
     }
+
     if (req.file) {
       const parsedUrl = new URL(image);
       const imagePath = parsedUrl.pathname;
@@ -266,10 +271,8 @@ module.exports.editUser = async (req, res) => {
     if (req.body.password) {
       req.body.password = await bcrypt.hash(req.body.password, 10);
     }
-    const editUser = await user.update(req.body, {
-      where: { id },
-      runValidators: true,
-    });
+
+    const editUser = await updateUser(req.body, { id });
 
     if (!editUser)
       return res.status(400).json({
@@ -329,10 +332,7 @@ module.exports.editProfile = async (req, res) => {
       div,
     };
 
-    const editUser = await user.update(updatedUser, {
-      where: { id: userId },
-      runValidators: true,
-    });
+    const editUser = await updateUser(updatedUser, { id: userId });
 
     if (!editUser)
       return res.status(400).json({
@@ -352,22 +352,23 @@ module.exports.editProfile = async (req, res) => {
   }
 };
 
-module.exports.studentList = async (req, res) => {
+module.exports.userList = async (req, res) => {
   try {
-    const { page, search, limit } = req.query;
-    const roleId = role.student;
+    const { page, search, limit, roleType } = req.query;
+
+    const roleId = roleType || role[roleType] || role.student;
     if (search && search.trim()) {
-      const searchResults = await user.findAll({
-        where: {
-          roleId,
-          name: {
-            [Op.like]: `%${search}%`,
-          },
+      const whereCondition = {
+        roleId,
+        name: {
+          [Op.like]: `%${search}%`,
         },
-        attributes: {
-          exclude: ["password"],
-        },
-      });
+      };
+      const attributes = {
+        exclude: ["password"],
+      };
+
+      const searchResults = await findAllUsers(whereCondition, attributes);
 
       return res.status(200).json({
         message: userMassage.success.studentList,
@@ -376,7 +377,7 @@ module.exports.studentList = async (req, res) => {
     }
     const pageCount = page || pagination.pageCount;
     const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
-    const totalUser = await user.count({ where: { roleId } });
+    const totalUser = await countUsers({ roleId });
     const maxPage = totalUser <= limitDoc ? 1 : Math.ceil(totalUser / limitDoc);
 
     if (pageCount > maxPage)
@@ -386,115 +387,23 @@ module.exports.studentList = async (req, res) => {
 
     const skip = parseInt((pageCount - 1) * limitDoc);
 
-    const studentList = await user.findAll({
-      where: { roleId },
-      offset: skip,
-      limit: limitDoc,
-    });
+    const attributes = {
+      exclude: ["password"],
+    };
+    const whereCondition = {
+      roleId,
+    };
+
+    const userList = await findAllUsers(
+      whereCondition,
+      attributes,
+      skip,
+      limitDoc
+    );
 
     return res.status(200).json({
       message: userMassage.success.fetch,
-      studentList,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: bookMassage.error.genericError });
-  }
-};
-
-module.exports.hodList = async (req, res) => {
-  try {
-    const { page, search, limit } = req.query;
-    const roleId = role.hod;
-    if (search && search.trim()) {
-      const searchResults = await user.findAll({
-        where: {
-          roleId,
-          name: {
-            [Op.like]: `%${search}%`,
-          },
-        },
-        attributes: {
-          exclude: ["password"],
-        },
-      });
-
-      return res.status(200).json({
-        searchResults,
-        message: userMassage.success.studentList,
-      });
-    }
-    const pageCount = page || pagination.pageCount;
-    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
-    const totalUser = await user.count({ where: { roleId } });
-    const maxPage = totalUser <= limitDoc ? 1 : Math.ceil(totalUser / limitDoc);
-
-    if (pageCount > maxPage)
-      return res
-        .status(400)
-        .json({ message: `There are only ${maxPage} page` });
-
-    const skip = parseInt((pageCount - 1) * limitDoc);
-
-    const hodList = await user.findAll({
-      where: { roleId },
-      offset: skip,
-      limit: limitDoc,
-    });
-
-    return res.status(200).json({
-      hodList,
-      message: userMassage.success.fetch,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: bookMassage.error.genericError });
-  }
-};
-
-module.exports.facultyList = async (req, res) => {
-  try {
-    const { page, search, limit } = req.query;
-    const roleId = role.faculty;
-    if (search && search.trim()) {
-      const searchResults = await user.findAll({
-        where: {
-          roleId,
-          name: {
-            [Op.like]: `%${search}%`,
-          },
-        },
-        attributes: {
-          exclude: ["password"],
-        },
-      });
-
-      return res.status(200).json({
-        searchResults,
-        message: userMassage.success.studentList,
-      });
-    }
-    const pageCount = page || pagination.pageCount;
-    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
-    const totalUser = await user.count({ where: { roleId } });
-    const maxPage = totalUser <= limitDoc ? 1 : Math.ceil(totalUser / limitDoc);
-
-    if (pageCount > maxPage)
-      return res
-        .status(400)
-        .json({ message: `There are only ${maxPage} page` });
-
-    const skip = parseInt((pageCount - 1) * limitDoc);
-
-    const facultyList = await user.findAll({
-      where: { roleId },
-      offset: skip,
-      limit: limitDoc,
-    });
-
-    return res.status(200).json({
-      facultyList,
-      message: userMassage.success.fetch,
+      userList,
     });
   } catch (error) {
     console.log(error);

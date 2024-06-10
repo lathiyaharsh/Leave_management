@@ -5,13 +5,9 @@ const { uploadImgPath } = require("../model/user");
 const {
   getRole,
   profile,
-  studentList,
-  hodList,
-  facultyList,
+  userList,
   removeUser,
   register,
-  registerHod,
-  registerFaculty,
   editUser,
   editProfile
 } = require("../controller/user");
@@ -21,9 +17,7 @@ const {
 routes.get("/removeUser/:id",verifyToken(["admin"]), removeUser);
 routes.get('/getRole',verifyToken(["student","admin", "hod", "faculty"]),getRole)
 routes.get("/profile",verifyToken(["student","admin", "hod", "faculty"]), profile);
-routes.get("/studentList",verifyToken(["admin", "hod", "faculty"]), studentList);
-routes.get("/hodList",verifyToken(["admin", "hod", "faculty"]), hodList);
-routes.get("/facultyList",verifyToken(["admin", "hod", "faculty"]), facultyList);
+routes.get("/userList",verifyToken(["admin", "hod", "faculty"]), userList);
 
 routes.post("/register", uploadImgPath, register);
 routes.post("/registerHod", uploadImgPath,verifyToken(["admin","hod"]), register);

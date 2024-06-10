@@ -36,7 +36,7 @@ module.exports.createUser = async (data) => {
     return createdUser;
   } catch (error) {
     console.error("Error creating user:", error);
-    throw new Error("Error checking user:", error);
+    throw error;
   }
 };
 
@@ -51,9 +51,10 @@ module.exports.findUser = async (whereCondition) => {
   }
 };
 
-module.exports.findAllUsers = async (whereCondition) => {
+module.exports.findAllUsers = async (whereCondition,attributes,offset,limit) => {
   try {
-    const allUsers = await user.findAll({ where: whereCondition });
+    console.log(whereCondition,attributes);
+    const allUsers = await user.findAll({ where: whereCondition ,offset,limit, attributes});
     return allUsers;
   } catch (error) {
     console.error("Error finding all users:", error);
@@ -63,23 +64,35 @@ module.exports.findAllUsers = async (whereCondition) => {
 
 module.exports.updateUser = async (data, whereCondition) => {
   try {
-    const [affectedRows] = await user.update(data, { where: whereCondition });
-    if (affectedRows === 0)  return false
+    const [affectedRows] = await user.update(data, {
+      where: whereCondition,
+      runValidators: true,
+    });
+    if (affectedRows === 0) return false;
     return affectedRows;
   } catch (error) {
     console.error("Error updating user:", error);
-    throw new Error("Error checking user:", error);
+    throw error;
   }
 };
 
 module.exports.deleteUser = async (whereCondition) => {
   try {
     const deletedRows = await user.destroy({ where: whereCondition });
-    if (deletedRows === 0) return false
+    if (deletedRows === 0) return false;
     return deletedRows;
   } catch (error) {
     console.error("Error deleting user:", error);
     throw new Error("Error checking user:", error);
-   
+  }
+};
+
+module.exports.countUsers =async (whereCondition) => {
+  try {
+    const totalUser = await user.count({ where: whereCondition });
+    return totalUser;
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    throw new Error("Error checking user:", error);
   }
 };

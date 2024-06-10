@@ -6,7 +6,7 @@ module.exports.createUserLeave = async (data) => {
         return createdUserLeave;
     } catch (error) {
         console.error('Error creating userLeave:', error);
-        throw error; // Re-throw the error so that the caller can handle it
+        throw error; 
     }
 }
 

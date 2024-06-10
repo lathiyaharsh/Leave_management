@@ -9,7 +9,7 @@ const bcrypt = require("bcrypt");
 const { roleByName } = require("../config/variables");
 const { checkUser, deleteFile, findUserId } = require("../service/user");
 
-function generateOTP() {
+const generateOTP = () => {
   try {
     let digits = "0123456789";
     let OTP = "";
@@ -17,7 +17,6 @@ function generateOTP() {
     for (let i = 0; i < 4; i++) {
       OTP += digits[Math.floor(Math.random() * len)];
     }
-
     return OTP;
   } catch (error) {
     console.log(error);

@@ -74,8 +74,11 @@ module.exports.removeUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deleteImage = await findUser({ id });
-    const { image } = deleteImage;
+    const userInfo = await findUser({ id });
+    if (!userInfo) {
+      return res.status(404).json({ message: userMassage.error.userNotFound });
+    }
+    const { image } = userInfo;
     const parsedUrl = new URL(image);
     const imagePath = parsedUrl.pathname;
     const fullPath = path.join(__dirname, "..", imagePath);
@@ -102,7 +105,7 @@ module.exports.removeUser = async (req, res) => {
 
 module.exports.register = async (req, res) => {
   try {
-    if (!req.body && !req.file)
+    if (!req.file)
       return res.status(400).json({ message: userMassage.error.fillDetails });
 
     const { error, value } = validateData(req.body);
@@ -223,7 +226,6 @@ module.exports.register = async (req, res) => {
 module.exports.editUser = async (req, res) => {
   try {
     const { id } = req.params;
-    // const userDetails = await user.findByPk(id);
     const userDetails = await findUser({ id });
 
     if (!userDetails)

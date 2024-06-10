@@ -17,7 +17,7 @@ const sendMail = async (emailDetails) => {
       from: process.env.EMAILPASSWORD,
       to: email,
       subject: "Welcome To LMS",
-      text: "Hello Manager ",
+      text: "Hello User ",
       html: htmlToSend,
     });
 

@@ -2,13 +2,13 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { userMassage } = require("../config/message");
 const { user } = require("../model/user");
-const { roleByName } = require("../config/variables");
+const { roleByName, role } = require("../config/variables");
 const fs = require("fs");
 
 const verifyToken = (role) => {
   return async (req, res, next) => {
     const token = req.cookies["jwt"];
-    
+
     if (!token)
       return res.status(403).json({ message: userMassage.error.tokenMissing });
 
@@ -20,7 +20,6 @@ const verifyToken = (role) => {
             .json({ message: userMassage.error.unauthorized });
 
         const userDetails = await getUser(decoded.userDetails);
-    
 
         if (userDetails == null)
           return res
@@ -58,9 +57,10 @@ const verifyToken = (role) => {
 
 const getUser = async (data) => {
   try {
-    const { email, name, id } = data;
+    const { id } = data;
+    const roleId = role[data.role];
     const getUserDetails = await user.findOne({
-      where: { email, name, id },
+      where: { roleId, id },
       attributes: { exclude: ["password"] },
     });
 

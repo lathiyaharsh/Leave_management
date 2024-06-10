@@ -4,10 +4,8 @@ const { uploadImgPath } = require("../model/user");
 const verifyToken = require("../middleware/middleware");
 const {
   register,
-  login,
   profile,
   editUser,
-  logout,
   applyLeave,
   leaveStatus,
   leaveBalance,
@@ -16,21 +14,17 @@ const {
   resetPassword,
 } = require("../controller/student");
 
-routes.post("/login", login);
+
 routes.post("/register", uploadImgPath, register);
-routes.post("/forgetPassword", forgetPassword);
-routes.post("/verifyOtp", verifyOtp);
 
-routes.put("/resetPassword", resetPassword);
 
-routes.use(verifyToken(["student"]));
+// routes.use(verifyToken(["student"]));
 
-routes.get("/profile", profile);
-routes.get("/logout", logout);
-routes.get("/leaveStatus", leaveStatus);
-routes.get("/leaveBalance", leaveBalance);
+// routes.get("/profile",verifyToken(["student"]), profile);
+routes.get("/leaveStatus",verifyToken(["student"]), leaveStatus);
+routes.get("/leaveBalance",verifyToken(["student"]), leaveBalance);
 
-routes.post("/applyLeave", applyLeave);
-routes.put("/editUser", uploadImgPath, editUser);
+routes.post("/applyLeave",verifyToken(["student"]), applyLeave);
+// routes.put("/editUser", uploadImgPath,verifyToken(["student"]), editUser);
 
 module.exports = routes;

@@ -92,6 +92,7 @@ function validateData(datas) {
     address: Joi.string().required(),
     department: Joi.string().allow(null).optional(),
     div: Joi.string().allow(null).optional(),
+    role: Joi.string().allow(null).optional(),
   });
   return schema.validate(datas);
 }

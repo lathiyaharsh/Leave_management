@@ -7,6 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const nodemailer = require("nodemailer");
 const { roleByName } = require("../config/variables");
+const { transporter } = require("./mail");
 
 const getPendingLeave = async () => {
   try {
@@ -34,16 +35,6 @@ const sendReminderEmail = async (PendingLeaves) => {
   try {
     for (const leave of PendingLeaves) {
       const requestedBy = await user.findOne({ where: { id: leave.userId } });
-
-      const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAILFROM,
-          pass: process.env.EMAILPASSWORD,
-        },
-      });
 
       const userDetail = await findUser(leave.requestToId);
 
@@ -75,6 +66,7 @@ const sendReminderEmail = async (PendingLeaves) => {
     }
   } catch (error) {
     console.log(error);
+    return { valid: false, res: "Mail not send successfully." };
   }
 };
 

@@ -27,6 +27,7 @@ module.exports = {
       leaveUpdateWithOutEmail:
         "The leave was updated successfully. but the email was not sent successfully. please update to user",
       userLeave: "User leave created successfully.",
+      mail: "The email was sent successfully.",
     },
     error: {
       unauthorized: "Unauthorized - invalid token",
@@ -51,8 +52,9 @@ module.exports = {
         "You have already requested a leave twice and wait for the approval.",
       studentList: "The student list has not been retrieved successfully.",
       studentUpdateRole: "This individual is not a student.",
-      hodUpdateRole: "This person is not a head of department.",
-      facultyUpdateRole: "This person is not a member of the faculty.",
+      adminUpdateRole: "You can not update admin",
+      hodUpdateRole: "You can not update hod",
+      facultyUpdateRole: "You can not update faculty.",
       userDelete: "The deletion of the user was not successful.",
       otp: "The OTP was not sent successfully.",
       otpVerify: "The OTP not successfully verified.",

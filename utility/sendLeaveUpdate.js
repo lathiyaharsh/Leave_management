@@ -3,17 +3,9 @@ const handlebars = require("handlebars");
 const path = require("path");
 const fs = require("fs");
 const { user } = require("../model/user");
+const { transporter } = require("./mail");
 const sendLeaveUpdate = async (emailDetails) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: {
-        user: process.env.EMAILFROM,
-        pass: process.env.EMAILPASSWORD,
-      },
-    });
 
     const filePath = "views/sendLeaveUpdate.hbs";
     const source = fs.readFileSync(filePath, "utf-8");
@@ -36,14 +28,15 @@ const sendLeaveUpdate = async (emailDetails) => {
     const mail = await transporter.sendMail({
       from: process.env.EMAILPASSWORD,
       to: email,
-      subject: "Welcome To LMS",
-      text: "Hello Manager ",
+      subject: "Leave Update",
+      text: "Hello User ",
       html: htmlToSend,
     });
 
     if (mail) return { valid: true, res: "Mail send successfully." };
   } catch (error) {
     console.log(error);
+    return { valid: false, res: "Mail not  send successfully." };
   }
 };
 

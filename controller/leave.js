@@ -18,6 +18,7 @@ const {
   findAllUserLeave,
   updateUserLeave,
 } = require("../service/userLeave");
+const { user } = require("../model/user");
 
 module.exports.allLeaveStatus = async (req, res) => {
   try {

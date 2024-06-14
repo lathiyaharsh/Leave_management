@@ -46,6 +46,8 @@ module.exports = {
       delete: "The user's details were not deleted.",
       update: "The user's data was not updated successfully.",
       leaveRequest: "The leave request was not sent successfully.",
+      leaveRequestNotFound: "The leave request was not found.",
+      leaveBalance: "Leave balance not retrieved successfully",
       leaveStatus: "Leave request has already been approved or rejected.",
       leaveStatusError: "You cannot modify the status of your leave.",
       leaveRequestLimit:
@@ -60,6 +62,7 @@ module.exports = {
       otpVerify: "The OTP not successfully verified.",
       otpTime:
         "The OTP has not been sent successfully.please wait for some time.",
+      sendOtp: "Please send otp again",
       userLeave: "User leave not created successfully.",
       mail: "The email was not sent successfully.",
       leaveApproval: "Leave not approved successfully",

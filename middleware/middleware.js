@@ -1,9 +1,9 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { userMassage } = require("../config/message");
-const { user } = require("../model/user");
 const { roleByName, role } = require("../config/variables");
 const fs = require("fs");
+const { findUser } = require("../service/user");
 
 const verifyToken = (role) => {
   return async (req, res, next) => {
@@ -19,20 +19,12 @@ const verifyToken = (role) => {
             .status(401)
             .json({ message: userMassage.error.unauthorized });
 
-        const userDetails = await getUser(decoded.userDetails);
-
-        if (userDetails == null)
+        const userDetails = await getUser(decoded.data);
+        if (userDetails == null && !userDetails)
           return res
             .status(401)
             .json({ message: userMassage.error.unauthorized });
         req.user = userDetails;
-
-        // if (role) {
-        //   if ( roleByName[userDetails.roleId ] !== role) {
-        //     if(req.file) await fs.unlinkSync(req.file.path)
-        //     return res.status(403).json({ message: `Forbidden: ${role} access required` });
-        //   }
-        // }
 
         if (role && role.length > 0) {
           userRole = roleByName[userDetails.roleId];
@@ -57,13 +49,12 @@ const verifyToken = (role) => {
 
 const getUser = async (data) => {
   try {
-    const { id } = data;
+    let id;
+    data?.userId ? (id = data?.userId) : (id = data?.id);
     const roleId = role[data.role];
-    const getUserDetails = await user.findOne({
-      where: { roleId, id },
-      attributes: { exclude: ["password"] },
-    });
-
+    const attributes = { exclude: ["password"] };
+    const where = { roleId, id };
+    const getUserDetails = await findUser(where, attributes);
     return getUserDetails;
   } catch (error) {
     console.log(error);

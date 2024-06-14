@@ -1,19 +1,14 @@
-const nodemailer = require("nodemailer");
 const handlebars = require("handlebars");
-const path = require("path");
 const fs = require("fs");
-const { user } = require("../model/user");
 const { transporter } = require("./mail");
+const { findUser } = require("../service/user");
 const sendLeaveUpdate = async (emailDetails) => {
   try {
-
     const filePath = "views/sendLeaveUpdate.hbs";
     const source = fs.readFileSync(filePath, "utf-8");
     const template = handlebars.compile(source);
-
     const { userId, startDate, endDate, leaveType, status } = emailDetails;
-
-    const userEmail = await user.findOne({ where: { id: userId } });
+    const userEmail = await findUser({ id: userId });
 
     const { email, name } = userEmail;
 

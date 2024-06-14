@@ -15,9 +15,8 @@ const {
 // routes.use(verifyToken(["student","admin", "hod", "faculty"]));
 
 routes.get("/removeUser/:id",verifyToken(["admin"]), removeUser);
-routes.get('/getRole',verifyToken(["student","admin", "hod", "faculty"]),getRole)
 routes.get("/profile",verifyToken(["student","admin", "hod", "faculty"]), profile);
-routes.get("/userList",verifyToken(["admin", "hod", "faculty"]), userList);
+routes.get("/userList",verifyToken(["admin", "hod", "faculty","student"]), userList);
 
 routes.post("/register", uploadImgPath, register);
 routes.post("/registerHod", uploadImgPath,verifyToken(["admin","hod"]), register);

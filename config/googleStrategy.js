@@ -4,6 +4,7 @@ const passport = require("passport");
 const { user } = require("../model/user");
 const bcrypt = require("bcrypt");
 const { role } = require("./variables");
+const { findUser } = require("../service/user");
 
 passport.use(
   new GoogleStrategy(
@@ -14,9 +15,8 @@ passport.use(
     },
     async function (accessToken, refreshToken, profile, cb) {
       try {
-        const checkEmail = await user.findOne({
-          where: { email: profile.emails[0].value },
-        });
+        const email = profile.emails[0].value
+        const checkEmail = await findUser({email })
         if (checkEmail) {
           cb(null, checkEmail);
         } else {

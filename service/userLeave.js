@@ -24,14 +24,33 @@ module.exports.updateUserLeave = async (data, whereCondition) => {
 }
 
 
-module.exports.findUserLeave = async (whereCondition) => {
+module.exports.findUserLeave = async (whereCondition,attributes) => {
     try {
-        const foundUserLeave = await userLeave.findOne({ where: whereCondition });
-        if (foundUserLeave) {
-            return foundUserLeave;
-        } else {
-            throw new Error('UserLeave not found');
-        }
+        const foundUserLeave = await userLeave.findOne({ where: whereCondition ,attributes});
+        if (!foundUserLeave) return false;
+        return foundUserLeave;
+    } catch (error) {
+        console.error('Error finding userLeave:', error);
+        throw error;
+    }
+}
+
+module.exports.countUserLeave= async() => {
+    try {
+        const countUserLeave = await userLeave.count({});
+        if (!countUserLeave) return false;
+        return countUserLeave;
+    } catch (error) {
+        console.error('Error finding userLeave:', error);
+        throw error;
+    }
+}
+
+module.exports.findAllUserLeave = async(attributes,order,include,offset,limit) =>{
+    try {
+        const userLeaves = await userLeave.findAll({attributes,order,include,offset,limit});
+        if (!userLeaves) return false;
+        return userLeaves;
     } catch (error) {
         console.error('Error finding userLeave:', error);
         throw error;

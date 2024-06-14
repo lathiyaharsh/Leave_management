@@ -1,17 +1,23 @@
-const fs = require("fs");
 require("dotenv").config();
 const { Op, Sequelize } = require("sequelize");
-const userLeave = require("../model/userLeave");
 const { userMassage } = require("../config/message");
-const leaveRequest = require("../model/leaveRequest");
-const { user } = require("../model/user");
 const { role, pagination } = require("../config/variables");
-
 const sendLeaveUpdate = require("../utility/sendLeaveUpdate");
 const moment = require("moment");
 const validateDates = require("../utility/validateDates");
-
-
+const {
+  createLeaveRequest,
+  findAllLeaveRequest,
+  countUserLeaveRequest,
+  findLeaveRequest,
+  updateLeaveRequest,
+} = require("../service/leaveRequest");
+const {
+  findUserLeave,
+  countUserLeave,
+  findAllUserLeave,
+  updateUserLeave,
+} = require("../service/userLeave");
 
 module.exports.allLeaveStatus = async (req, res) => {
   try {
@@ -31,7 +37,8 @@ module.exports.allLeaveStatus = async (req, res) => {
 
     const pageCount = page || pagination.pageCount;
     const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
-    const totalLeave = await leaveRequest.count({ where: whereCondition });
+
+    const totalLeave = await countUserLeaveRequest(whereCondition);
     const maxPage =
       totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
 
@@ -42,28 +49,32 @@ module.exports.allLeaveStatus = async (req, res) => {
 
     const skip = parseInt((pageCount - 1) * limitDoc);
 
-    const searchResults = await leaveRequest.findAll({
-      where: whereCondition,
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: userLeave,
-          attributes: ["usedLeave", "availableLeave"],
-        },
-        {
-          model: user,
-          as: "requestedBy",
-          attributes: ["id", "name", "email", "roleId"],
-        },
-        {
-          model: user,
-          as: "requestedTo",
-          attributes: ["id", "name", "email", "roleId"],
-        },
-      ],
-      offset: skip,
-      limit: limitDoc,
-    });
+    const order = [["createdAt", "DESC"]];
+    const include = [
+      {
+        model: userLeave,
+        attributes: ["usedLeave", "availableLeave"],
+      },
+      {
+        model: user,
+        as: "requestedBy",
+        attributes: ["id", "name", "email", "roleId"],
+      },
+      {
+        model: user,
+        as: "requestedTo",
+        attributes: ["id", "name", "email", "roleId"],
+      },
+    ];
+    const attributes = {};
+    const searchResults = await findAllLeaveRequest(
+      whereCondition,
+      attributes,
+      order,
+      include,
+      skip,
+      limitDoc
+    );
 
     return res.status(200).json({
       message: userMassage.success.studentList,
@@ -78,29 +89,40 @@ module.exports.allLeaveStatus = async (req, res) => {
 module.exports.leaveStatus = async (req, res) => {
   try {
     const requestToId = req.user.id;
-    const leaveStatus = await leaveRequest.findAll({
-      attributes: {
-        include: [
-          [
-            Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`),
-            "leaveDifference",
-          ],
-        ],
-      },
-      where: { requestToId },
-      order: [["createdAt", "DESC"]],
+
+    const attributes = {
       include: [
-        {
-          model: userLeave,
-          attributes: ["usedLeave", "availableLeave"],
-        },
-        {
-          model: user,
-          as: "requestedBy",
-          attributes: ["id", "name", "email", "div", "roleId"],
-        },
+        [
+          Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`),
+          "leaveDifference",
+        ],
       ],
-    });
+    };
+    const whereCondition = { requestToId };
+    const order = [["createdAt", "DESC"]];
+    const include = [
+      {
+        model: userLeave,
+        attributes: ["usedLeave", "availableLeave"],
+      },
+      {
+        model: user,
+        as: "requestedBy",
+        attributes: ["id", "name", "email", "div", "roleId"],
+      },
+    ];
+
+    const leaveStatus = await findAllLeaveRequest(
+      whereCondition,
+      attributes,
+      order,
+      include
+    );
+    if (!leaveStatus)
+      return res
+        .status(400)
+        .json({ message: userMassage.error.leaveRequestNotFound });
+
     return res
       .status(200)
       .json({ leaveStatus, message: userMassage.success.leaveStatus });
@@ -114,7 +136,11 @@ module.exports.leaveApproval = async (req, res) => {
   try {
     const id = req.params.id;
     const loginUser = req.user.id;
-    const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
+    const checkLeaveStatus = await findLeaveRequest({ id });
+    if (!checkLeaveStatus)
+      return res
+        .status(400)
+        .json({ message: userMassage.error.leaveRequestNotFound });
     const { status, requestToId } = checkLeaveStatus;
 
     if (req.user.roleId != 1) {
@@ -127,22 +153,22 @@ module.exports.leaveApproval = async (req, res) => {
     if (status != "Pending")
       return res.status(400).json({ message: userMassage.error.leaveStatus });
 
-    const leaveApproval = await leaveRequest.update(
-      { status: "Approved" },
-      { where: { id }, returning: true }
+    const leaveApproval = await updateLeaveRequest(
+      { id },
+      { status: "Approved" }
     );
 
     if (!leaveApproval)
       return res.status(400).json({ message: userMassage.error.leaveApproval });
 
-    const leaveDetails = await leaveRequest.findOne({ where: { id } });
+    const leaveDetails = await findLeaveRequest({ id });
     const { startDate, endDate, userId, leaveType } = leaveDetails;
     const start = moment(startDate, "YYYY-MM-DD");
     const end = moment(endDate, "YYYY-MM-DD");
     const leaveDays = start.isSame(end, "day")
       ? 0.5
       : end.diff(start, "days") + 1;
-    const leaveData = await userLeave.findOne({ where: { userId } });
+    const leaveData = await findUserLeave({ userId });
     const availableLeave = leaveData.availableLeave - leaveDays;
     const usedLeave = Number(leaveData.usedLeave) + Number(leaveDays);
     const remainingDays = leaveData.totalWorkingDays - usedLeave;
@@ -157,9 +183,7 @@ module.exports.leaveApproval = async (req, res) => {
       attendancePercentage,
     };
 
-    const updateLeave = await userLeave.update(updateLeaveDetails, {
-      where: { userId },
-    });
+    const updateLeave = await updateUserLeave(updateLeaveDetails, { userId });
 
     let userMsg = "";
 
@@ -174,12 +198,13 @@ module.exports.leaveApproval = async (req, res) => {
     };
 
     const sendMail = await sendLeaveUpdate(emailDetails);
-    !sendMail.valid ? userMsg += userMassage.error.mail : userMsg += userMassage.success.mail;
+    !sendMail.valid
+      ? (userMsg += userMassage.error.mail)
+      : (userMsg += userMassage.success.mail);
 
     return res.status(200).json({
       message: userMassage.success.leaveApproval,
       email: userMsg,
-    
     });
   } catch (error) {
     console.log(error);
@@ -191,7 +216,11 @@ module.exports.leaveReject = async (req, res) => {
   try {
     const id = req.params.id;
     const loginUser = req.user.id;
-    const checkLeaveStatus = await leaveRequest.findOne({ where: { id } });
+    const checkLeaveStatus = await findLeaveRequest({ id });
+    if (!checkLeaveStatus)
+      return res
+        .status(400)
+        .json({ message: userMassage.error.leaveRequestNotFound });
     const { status, requestToId, userId, startDate, endDate, leaveType } =
       checkLeaveStatus;
 
@@ -205,9 +234,9 @@ module.exports.leaveReject = async (req, res) => {
     if (status != "Pending")
       return res.status(200).json({ message: userMassage.error.leaveStatus });
 
-    const leaveReject = await leaveRequest.update(
-      { status: "Rejected" },
-      { where: { id }, returning: true }
+    const leaveReject = await updateLeaveRequest(
+      { id },
+      { status: "Rejected" }
     );
     if (!leaveReject)
       return res.status(400).json({
@@ -223,7 +252,9 @@ module.exports.leaveReject = async (req, res) => {
 
     const sendMail = await sendLeaveUpdate(emailDetails);
     let userError = "";
-    !sendMail.valid ? userError += userMassage.error.mail : userError += userMassage.success.mail;
+    !sendMail.valid
+      ? (userError += userMassage.error.mail)
+      : (userError += userMassage.success.mail);
 
     return res.status(200).json({
       message: userMassage.success.leaveReject,
@@ -240,7 +271,8 @@ module.exports.leaveReport = async (req, res) => {
     const { page, limit } = req.query;
     const pageCount = page || pagination.pageCount;
     const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
-    const totalLeave = await userLeave.count({});
+
+    const totalLeave = await countUserLeave();
     const maxPage =
       totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
 
@@ -251,20 +283,24 @@ module.exports.leaveReport = async (req, res) => {
 
     const skip = parseInt((pageCount - 1) * limitDoc);
 
-    const leaveReport = await userLeave.findAll({
-      attributes: {
-        exclude: ["id", "academicYear", "createdAt", "updatedAt"],
+    const attributes = {
+      exclude: ["id", "academicYear", "createdAt", "updatedAt"],
+    };
+    const include = [
+      {
+        model: user,
+        attributes: ["name", "email", "roleId"],
       },
-      order: [["usedLeave", "DESC"]],
-      include: [
-        {
-          model: user,
-          attributes: ["name", "email", "roleId"],
-        },
-      ],
-      offset: skip,
-      limit: limitDoc,
-    });
+    ];
+    const order = [["usedLeave", "DESC"]];
+
+    const leaveReport = await findAllUserLeave(
+      attributes,
+      order,
+      include,
+      skip,
+      limitDoc
+    );
 
     return res
       .status(200)
@@ -280,10 +316,8 @@ module.exports.applyLeave = async (req, res) => {
     const userId = req.user.id;
     const status = "Pending";
     const { roleId } = req.user;
-    const checkLeave = await leaveRequest.findAndCountAll({
-      where: { userId, status },
-    });
 
+    const checkLeave = await countUserLeaveRequest({ userId, status });
     if (checkLeave.count <= 2) {
       const { startDate, endDate, leaveType, reason } = req.body;
       const requestToId = req.body?.requestToId || 2;
@@ -305,7 +339,7 @@ module.exports.applyLeave = async (req, res) => {
         roleId,
       };
 
-      const createLeave = await leaveRequest.create(leaveDetails);
+      const createLeave = await createLeaveRequest(leaveDetails);
       if (!createLeave)
         return res
           .status(400)
@@ -332,18 +366,26 @@ module.exports.userLeaveStatus = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    const leaveStatus = await leaveRequest.findAll({
-      where: { userId },
-      attributes: { exclude: ["updatedAt"] },
-      order: [["createdAt", "DESC"]],
-      include: [
-        {
-          model: user,
-          as: "requestedTo",
-          attributes: ["name", "email"],
-        },
-      ],
-    });
+    const whereCondition = { userId };
+    const attributes = {
+      exclude: ["updatedAt"],
+    };
+    const order = [["createdAt", "DESC"]];
+    const include = [
+      {
+        model: user,
+        as: "requestedTo",
+        attributes: ["name", "email"],
+      },
+    ];
+
+    const leaveStatus = await findAllLeaveRequest(
+      whereCondition,
+      attributes,
+      order,
+      include
+    );
+
     return res
       .status(200)
       .json({ leaveStatus, message: userMassage.success.leaveStatus });
@@ -356,10 +398,15 @@ module.exports.userLeaveStatus = async (req, res) => {
 module.exports.leaveBalance = async (req, res) => {
   try {
     const userId = req.user.id;
-    const leaveBalance = await userLeave.findOne({
-      where: { userId },
-      attributes: { exclude: ["id", "createdAt", "updatedAt"] },
-    });
+
+    const whereCondition = { userId };
+    const attributes = {
+      exclude: ["id", "createdAt", "updatedAt"],
+    };
+    const leaveBalance = await findUserLeave(whereCondition, attributes);
+    if (!leaveBalance) {
+      return res.status(400).json({ message: userMassage.error.leaveBalance });
+    }
     return res
       .status(200)
       .json({ leaveBalance, message: userMassage.success.leaveBalance });

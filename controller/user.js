@@ -21,20 +21,6 @@ const {
 } = require("../service/user");
 const { createUserLeave } = require("../service/userLeave");
 
-module.exports.getRole = async = (req, res) => {
-  try {
-    const findRole = req.user.roleId;
-    const role = roleByName[findRole];
-
-    return res.status(200).json({
-      message: userMassage.success.profileRetrieved,
-      profile: role,
-    });
-  } catch (error) {
-    return res.status(404).json({ message: userMassage.error.genericError });
-  }
-};
-
 module.exports.profile = async (req, res) => {
   try {
     const {
@@ -262,10 +248,14 @@ module.exports.editUser = async (req, res) => {
     }
 
     if (req.file) {
-      const parsedUrl = new URL(image);
-      const imagePath = parsedUrl.pathname;
-      const fullPath = path.join(__dirname, "..", imagePath);
-      await fs.unlinkSync(fullPath);
+      try {
+        const parsedUrl = new URL(image);
+        const imagePath = parsedUrl.pathname;
+        const fullPath = path.join(__dirname, "..", imagePath);
+        await fs.unlinkSync(fullPath);
+      } catch (error) {
+        console.log(error);
+      }
 
       const baseUrl = `${req.protocol}://${req.get("host")}`;
       req.body.image = baseUrl + imgPath + "/" + req.file.filename;
@@ -311,10 +301,14 @@ module.exports.editProfile = async (req, res) => {
       }
     }
     if (req.file) {
-      const parsedUrl = new URL(userImage);
-      const imagePath = parsedUrl.pathname;
-      const fullPath = path.join(__dirname, "..", imagePath);
-      await fs.unlinkSync(fullPath);
+      try {
+        const parsedUrl = new URL(userImage);
+        const imagePath = parsedUrl.pathname;
+        const fullPath = path.join(__dirname, "..", imagePath);
+        await fs.unlinkSync(fullPath);
+      } catch (error) {
+        console.log(error);
+      }
 
       const baseUrl = `${req.protocol}://${req.get("host")}`;
       req.body.image = baseUrl + imgPath + "/" + req.file.filename;
@@ -356,6 +350,7 @@ module.exports.editProfile = async (req, res) => {
 
 module.exports.userList = async (req, res) => {
   try {
+    
     const { page, search, limit, roleType } = req.query;
 
     const roleId = roleType || role[roleType] || role.student;
@@ -366,9 +361,15 @@ module.exports.userList = async (req, res) => {
           [Op.like]: `%${search}%`,
         },
       };
-      const attributes = {
+      let attributes = {
         exclude: ["password"],
       };
+      if(req.user.roleId == 4){
+        attributes = {
+          exclude: ["password","phone","roleId","address","grNumber"],
+        };
+      }
+      
 
       const searchResults = await findAllUsers(whereCondition, attributes);
 
@@ -389,9 +390,14 @@ module.exports.userList = async (req, res) => {
 
     const skip = parseInt((pageCount - 1) * limitDoc);
 
-    const attributes = {
+    let attributes = {
       exclude: ["password"],
     };
+      if(req.user.roleId == 4){
+        attributes = {
+          exclude: ["password","phone","roleId","address","grNumber"],
+        };
+      }
     const whereCondition = {
       roleId,
     };

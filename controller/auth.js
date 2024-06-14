@@ -1,48 +1,22 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { userMassage } = require("../config/message");
-const otpModel = require("../model/otp");
 const sendOtpMail = require("../utility/sendOtpMail");
-const { Sequelize } = require("sequelize");
-const { user } = require("../model/user");
 const bcrypt = require("bcrypt");
 const { roleByName } = require("../config/variables");
-const { checkUser, deleteFile, findUserId } = require("../service/user");
-
-const generateOTP = () => {
-  try {
-    let digits = "0123456789";
-    let OTP = "";
-    let len = digits.length;
-    for (let i = 0; i < 4; i++) {
-      OTP += digits[Math.floor(Math.random() * len)];
-    }
-    return OTP;
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-async function deleteExpiredOTP() {
-  try {
-    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
-    await otpModel.destroy({
-      where: {
-        createdAt: {
-          [Sequelize.Op.lt]: threeMinutesAgo,
-        },
-      },
-    });
-    console.log("Expired OTPs deleted successfully.");
-  } catch (error) {
-    console.error("Error deleting expired OTPs:", error);
-  }
-}
+const { findUserByEmail, updateUser } = require("../service/user");
+const {
+  deleteExpiredOTP,
+  generateOTP,
+  createOTP,
+  findOTP,
+} = require("../service/otp");
 
 module.exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const findUser = await user.findOne({ where: { email } });
+
+    const findUser = await findUserByEmail(email);
 
     if (!findUser)
       return res.status(404).json({ message: userMassage.error.userNotFound });
@@ -61,7 +35,7 @@ module.exports.login = async (req, res) => {
       };
 
       const token = isValidPassword
-        ? await jwt.sign({ userDetails }, process.env.SECRETKEY, {
+        ? await jwt.sign({ data: userDetails }, process.env.SECRETKEY, {
             expiresIn: "1h",
           })
         : null;
@@ -100,30 +74,41 @@ module.exports.forgetPassword = async (req, res) => {
 
     const { email } = req.body;
 
-    const findUser = await findUserId(email);
+    const findExistingOtp = await findOTP({ email });
+    if (findExistingOtp) {
+      await deleteExpiredOTP();
+      return res.status(400).json({ message: userMassage.error.otpTime });
+    }
+
+    const findUser = await findUserByEmail(email);
     if (!findUser)
       return res.status(404).json({ message: userMassage.error.userNotFound });
 
     if (findUser) {
-      const { id , email , roleId } = findUser;
+      const { id, email, roleId } = findUser;
       const otp = generateOTP();
       const otpDetails = {
-        userId:id,
+        userId: id,
         email,
         otp,
-        roleId
+        roleId,
       };
-      const createOtp = await otpModel.create(otpDetails);
 
-      if (!createOtp)
+      const createNewOtp = await createOTP(otpDetails);
+      if (!createNewOtp)
         return res.status(400).json({ message: userMassage.error.otp });
 
       const sendOtpEmail = await sendOtpMail(otpDetails);
 
-      if (sendOtpEmail.valid) setTimeout(deleteExpiredOTP, 60 * 3000);
+      if (!sendOtpEmail.valid) {
+        setTimeout(deleteExpiredOTP, 60 * 3000);
+        return res.status(201).json({ message: userMassage.error.otpTime });
+      }
+      setTimeout(deleteExpiredOTP, 60 * 3000);
       return res.status(201).json({ message: userMassage.success.otp });
     }
   } catch (error) {
+    //second time
     if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(400).json({ message: userMassage.error.otpTime });
     }
@@ -136,17 +121,34 @@ module.exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const findOtp = await otpModel.findOne({ where: { email } });
-    
-    if (findOtp.otp === otp) {
-      const token = await jwt.sign({ findOtp }, process.env.SECRETKEY, {
-        expiresIn: "1h",
-      });
-      res.cookie("verifyOtp", token, { httpOnly: true });
-      return res.status(200).json({
-        message: userMassage.success.otpVerify,
-        token,
-      });
+    const findUserDetails = await findOTP({ email });
+    if (!findUserDetails) {
+      return res.status(400).json({ message: userMassage.error.sendOtp });
+    }
+    {
+      const { userId, email, roleId } = findUserDetails;
+      const role = roleByName[roleId];
+      const userDetails = {
+        userId,
+        otp,
+        email,
+        role,
+      };
+
+      if (findUserDetails.otp === otp) {
+        const token = await jwt.sign(
+          { data: userDetails },
+          process.env.SECRETKEY,
+          {
+            expiresIn: "2m",
+          }
+        );
+        res.cookie("jwt", token, { httpOnly: true });
+        return res.status(200).json({
+          message: userMassage.success.otpVerify,
+          token,
+        });
+      }
     }
 
     return res.status(400).json({ message: userMassage.error.otpVerify });
@@ -160,14 +162,11 @@ module.exports.resetPassword = async (req, res) => {
   try {
     const { password } = req.body;
     const { id } = req.user;
-    console.log(id, password);
     const updatePassword = {
       password: await bcrypt.hash(password, 10),
     };
 
-    const updateDetails = await user.update(updatePassword, {
-      where: { id },
-    });
+    const updateDetails = await updateUser(updatePassword, { id });
 
     if (!updateDetails)
       return res.status(400).json({ message: userMassage.error.update });

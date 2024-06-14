@@ -1,6 +1,4 @@
-const nodemailer = require("nodemailer");
 const handlebars = require("handlebars");
-const path = require("path");
 const fs = require("fs");
 const { transporter } = require("./mail");
 

@@ -5,7 +5,6 @@ const { DataTypes } = require("sequelize");
 const db = require("../config/sequelize");
 const role = require("./role");
 const Joi = require("joi");
-const validator = require("validator");
 
 const user = db.define(
   "user",

@@ -1,30 +1,27 @@
 require("dotenv").config();
 const cron = require("node-cron");
-const leave = require("../model/leaveRequest");
-const { user } = require("../model/user");
 const handlebars = require("handlebars");
-const path = require("path");
 const fs = require("fs");
-const nodemailer = require("nodemailer");
 const { roleByName } = require("../config/variables");
 const { transporter } = require("./mail");
+const { findAllLeaveRequest } = require("../service/leaveRequest");
+const { findUser } = require("../service/user");
 
 const getPendingLeave = async () => {
   try {
-    const PendingLeaves = await leave.findAll({ where: { status: "Pending" } });
+    const PendingLeaves = await findAllLeaveRequest({ status: "Pending" });
     return PendingLeaves;
   } catch (error) {
     console.log(error);
   }
 };
-const findUser = async (requestToId) => {
+const findUserByReqId = async (requestToId) => {
   try {
-    const userDetails = await user.findOne({
-      where: { id: requestToId },
-      attributes: {
-        exclude: ["password"],
-      },
-    });
+    const attributes = {
+      exclude: ["password"],
+    };
+    const id = requestToId;
+    const userDetails = await findUser({ id }, attributes);
     return userDetails;
   } catch (error) {
     console.log(error);
@@ -34,9 +31,8 @@ const findUser = async (requestToId) => {
 const sendReminderEmail = async (PendingLeaves) => {
   try {
     for (const leave of PendingLeaves) {
-      const requestedBy = await user.findOne({ where: { id: leave.userId } });
-
-      const userDetail = await findUser(leave.requestToId);
+      const requestedBy = await findUser({ id });
+      const userDetail = await findUserByReqId(leave.requestToId);
 
       const filePath = "views/leaveMail.hbs";
       const source = fs.readFileSync(filePath, "utf-8");
@@ -87,4 +83,3 @@ cron.schedule("0 9 * * *", async () => {
     console.log(error);
   }
 });
-

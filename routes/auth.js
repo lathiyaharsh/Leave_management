@@ -1,6 +1,12 @@
 const express = require("express");
 const routes = express.Router();
-const { login,logout, forgetPassword, verifyOtp, resetPassword } = require("../controller/auth");
+const {
+  login,
+  logout,
+  forgetPassword,
+  verifyOtp,
+  resetPassword,
+} = require("../controller/auth");
 const passport = require("passport");
 const verifyToken = require("../middleware/middleware");
 
@@ -23,6 +29,10 @@ routes.post("/login", login);
 routes.post("/forgetPassword", forgetPassword);
 routes.post("/verifyOtp", verifyOtp);
 
-routes.put("/resetPassword",verifyToken(["admin", "hod", "faculty","student"]), resetPassword);
+routes.put(
+  "/resetPassword",
+  verifyToken(["admin", "hod", "faculty", "student"]),
+  resetPassword
+);
 
 module.exports = routes;

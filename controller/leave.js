@@ -319,7 +319,7 @@ module.exports.applyLeave = async (req, res) => {
     const { roleId } = req.user;
 
     const checkLeave = await countUserLeaveRequest({ userId, status });
-    if (checkLeave.count <= 2) {
+    if (checkLeave.count <= 3) {
       const { startDate, endDate, leaveType, reason } = req.body;
       const requestToId = req.body?.requestToId || 2;
       const dates = {

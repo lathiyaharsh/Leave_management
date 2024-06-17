@@ -120,7 +120,6 @@ module.exports.forgetPassword = async (req, res) => {
 module.exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
-
     const findUserDetails = await findOTP({ email });
     if (!findUserDetails) {
       return res.status(400).json({ message: userMassage.error.sendOtp });
@@ -135,7 +134,7 @@ module.exports.verifyOtp = async (req, res) => {
         role,
       };
 
-      if (findUserDetails.otp === otp) {
+      if (findUserDetails.otp == otp) {
         const token = await jwt.sign(
           { data: userDetails },
           process.env.SECRETKEY,
@@ -167,10 +166,10 @@ module.exports.resetPassword = async (req, res) => {
     };
 
     const updateDetails = await updateUser(updatePassword, { id });
-
     if (!updateDetails)
       return res.status(400).json({ message: userMassage.error.update });
-
+    
+    res.clearCookie("jwt");
     return res.status(200).json({ message: userMassage.success.update });
   } catch (error) {
     console.log(error);

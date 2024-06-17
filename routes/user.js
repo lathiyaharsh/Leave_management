@@ -12,17 +12,16 @@ const {
   editProfile
 } = require("../controller/user");
 
-// routes.use(verifyToken(["student","admin", "hod", "faculty"]));
+// routes.use(verifyToken(["student","admin", "faculty"]));
 
 routes.get("/removeUser/:id",verifyToken(["admin"]), removeUser);
-routes.get("/profile",verifyToken(["student","admin", "hod", "faculty"]), profile);
-routes.get("/userList",verifyToken(["admin", "hod", "faculty","student"]), userList);
+routes.get("/profile",verifyToken(["student","admin", "faculty"]), profile);
+routes.get("/userList",verifyToken(["admin", "faculty","student"]), userList);
 
 routes.post("/register", uploadImgPath, register);
-routes.post("/registerHod", uploadImgPath,verifyToken(["admin","hod"]), register);
-routes.post("/registerFaculty", uploadImgPath,verifyToken(["admin","hod"]), register);
+routes.post("/addUser", uploadImgPath,verifyToken(["admin","faculty"]), register);
 
-routes.put("/editUser/:id", uploadImgPath,verifyToken(["admin","hod","faculty"]), editUser);
-routes.put("/editProfile", uploadImgPath,verifyToken(["admin", "hod", "faculty", "student"]), editProfile);
+routes.put("/editUser/:id", uploadImgPath,verifyToken(["admin","faculty"]), editUser);
+routes.put("/editProfile", uploadImgPath,verifyToken(["admin", "faculty", "student"]), editProfile);
 
 module.exports = routes;

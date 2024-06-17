@@ -220,18 +220,13 @@ module.exports.editUser = async (req, res) => {
     const userRoleId = userDetails.roleId;
     const requesterRoleId = req.user.roleId;
     if (
-      (userRoleId === 2 && requesterRoleId >= 2) ||
       (userRoleId === 3 && requesterRoleId === 3) ||
       (userRoleId === 1 && requesterRoleId >= 2)
     ) {
       return res.status(400).json({
         message:
           userMassage.error[
-            userRoleId === 2
-              ? "hodUpdateRole"
-              : userRoleId === 3
-                ? "facultyUpdateRole"
-                : "adminUpdateRole"
+            userRoleId === 3 ? "facultyUpdateRole" : "adminUpdateRole"
           ],
       });
     }
@@ -350,7 +345,6 @@ module.exports.editProfile = async (req, res) => {
 
 module.exports.userList = async (req, res) => {
   try {
-    
     const { page, search, limit, roleType } = req.query;
 
     const roleId = roleType || role[roleType] || role.student;
@@ -364,12 +358,11 @@ module.exports.userList = async (req, res) => {
       let attributes = {
         exclude: ["password"],
       };
-      if(req.user.roleId == 4){
+      if (req.user.roleId == 4) {
         attributes = {
-          exclude: ["password","phone","roleId","address","grNumber"],
+          exclude: ["password", "phone", "roleId", "address", "grNumber"],
         };
       }
-      
 
       const searchResults = await findAllUsers(whereCondition, attributes);
 
@@ -393,11 +386,11 @@ module.exports.userList = async (req, res) => {
     let attributes = {
       exclude: ["password"],
     };
-      if(req.user.roleId == 4){
-        attributes = {
-          exclude: ["password","phone","roleId","address","grNumber"],
-        };
-      }
+    if (req.user.roleId == 4) {
+      attributes = {
+        exclude: ["password", "phone", "roleId", "address", "grNumber"],
+      };
+    }
     const whereCondition = {
       roleId,
     };

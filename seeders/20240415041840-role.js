@@ -9,10 +9,6 @@ module.exports = {
         priority: "1",
       },
       {
-        name: "hod",
-        priority: "2",
-      },
-      {
         name: "faculty",
         priority: "3",
       },

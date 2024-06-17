@@ -29,9 +29,9 @@ routes.post("/login", login);
 routes.post("/forgetPassword", forgetPassword);
 routes.post("/verifyOtp", verifyOtp);
 
-routes.put(
+routes.post(
   "/resetPassword",
-  verifyToken(["admin", "hod", "faculty", "student"]),
+  verifyToken(["admin", "faculty", "student"]),
   resetPassword
 );
 

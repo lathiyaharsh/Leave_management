@@ -43,11 +43,6 @@ passport.deserializeUser(function (user, done) {
   done(null, user);
 });
 
-// app.use("/", require("./routes/index"));
-// app.use("/admin", require("./routes/admin"));
-// app.use("/hod", require("./routes/hod"));
-// app.use("/faculty", require("./routes/faculty"));
-
 app.use('/api/v1',require("./routes/index"));
 
 app.listen(port, (err) => {

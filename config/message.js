@@ -55,7 +55,6 @@ module.exports = {
       studentList: "The student list has not been retrieved successfully.",
       studentUpdateRole: "This individual is not a student.",
       adminUpdateRole: "You can not update admin",
-      hodUpdateRole: "You can not update hod",
       facultyUpdateRole: "You can not update faculty.",
       userDelete: "The deletion of the user was not successful.",
       otp: "The OTP was not sent successfully.",

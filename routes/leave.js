@@ -14,13 +14,13 @@ const {
 
 
 routes.get("/leaveReport",verifyToken(["admin"]), leaveReport);
-routes.get("/leaveStatus",verifyToken(["admin", "hod", "faculty"]), leaveStatus);//own leave status
-routes.get("/allLeaveStatus",verifyToken(["admin", "hod", "faculty"]), allLeaveStatus);
-routes.get("/leaveApproval/:id",verifyToken(["admin", "hod", "faculty"]), leaveApproval);
-routes.get("/leaveReject/:id",verifyToken(["admin", "hod", "faculty"]), leaveReject);
-routes.post("/applyLeave",verifyToken(["admin", "hod", "faculty","student"]), applyLeave);
-routes.get("/userLeaveStatus",verifyToken(["admin", "hod", "faculty","student"]), userLeaveStatus);
-routes.get("/leaveBalance",verifyToken(["admin", "hod", "faculty","student"]), leaveBalance);
+routes.get("/leaveStatus",verifyToken(["admin", "faculty"]), leaveStatus);
+routes.get("/allLeaveStatus",verifyToken(["admin", "faculty"]), allLeaveStatus);
+routes.get("/leaveApproval/:id",verifyToken(["admin", "faculty"]), leaveApproval);
+routes.get("/leaveReject/:id",verifyToken(["admin", "faculty"]), leaveReject);
+routes.get("/userLeaveStatus",verifyToken(["admin", "faculty","student"]), userLeaveStatus);//own leave status
+routes.get("/leaveBalance",verifyToken(["admin", "faculty","student"]), leaveBalance);
 
+routes.post("/applyLeave",verifyToken(["student"]), applyLeave);
 
 module.exports = routes;

@@ -19,6 +19,7 @@ const {
   updateUserLeave,
 } = require("../service/userLeave");
 const { user } = require("../model/user");
+const userLeave = require("../model/userLeave");
 
 module.exports.allLeaveStatus = async (req, res) => {
   try {
@@ -89,6 +90,7 @@ module.exports.allLeaveStatus = async (req, res) => {
 
 module.exports.leaveStatus = async (req, res) => {
   try {
+    const { search, userRole, limit, page } = req.query;
     const requestToId = req.user.id;
 
     const attributes = {
@@ -112,12 +114,29 @@ module.exports.leaveStatus = async (req, res) => {
         attributes: ["id", "name", "email", "div", "roleId"],
       },
     ];
+    
+    const pageCount = page || pagination.pageCount;
+    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
 
+    const totalLeave = await countUserLeaveRequest(whereCondition);
+    const maxPage =
+      totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
+    console.log(maxPage);
+    if (pageCount > maxPage)
+      return res
+        .status(400)
+        .json({ message: `There are only ${maxPage} page` });
+
+    const skip = parseInt((pageCount - 1) * limitDoc);
+
+      
     const leaveStatus = await findAllLeaveRequest(
       whereCondition,
       attributes,
       order,
-      include
+      include,
+      skip,
+      limitDoc
     );
     if (!leaveStatus)
       return res
@@ -126,7 +145,7 @@ module.exports.leaveStatus = async (req, res) => {
 
     return res
       .status(200)
-      .json({ leaveStatus, message: userMassage.success.leaveStatus });
+      .json({ leaveStatus, message: userMassage.success.leaveStatus ,maxPage : maxPage});
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });

@@ -63,7 +63,7 @@ module.exports.countUserLeaveRequest = async (whereCondition) => {
       where: whereCondition,
     });
     if (!foundUserLeave) return false;
-    return foundUserLeave;
+    return foundUserLeave.count;
   } catch (error) {
     console.error("Error finding userLeave:", error);
     throw error;

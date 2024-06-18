@@ -425,7 +425,7 @@ module.exports.userLeaveStatus = async (req, res) => {
     if (search && search.trim()) {
       whereCondition = {
         userId,
-        name: {
+        status: {
           [Op.like]: `%${search}%`,
         },
       };

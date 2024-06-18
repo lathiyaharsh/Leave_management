@@ -16,8 +16,8 @@ module.exports.findLeaveRequest = async (whereCondition) => {
     const findLeaveRequest = await leaveRequest.findOne({
       where: whereCondition,
     });
-    if (!findLeaveRequest) return findLeaveRequest;
-    throw error;
+    if (!findLeaveRequest) return false;
+    return findLeaveRequest
   } catch (error) {
     console.error("Error finding leaveRequest:", error);
     throw error;
@@ -28,8 +28,8 @@ module.exports.updateLeaveRequest = async (whereCondition, data) => {
   try {
     const [affectedRows] = await leaveRequest.update(data, {
       where: whereCondition,
-      returning: true,
     });
+    
     if (affectedRows === 0) return false;
     return affectedRows;
   } catch (error) {

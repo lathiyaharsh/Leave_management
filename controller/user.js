@@ -411,3 +411,124 @@ module.exports.userList = async (req, res) => {
     return res.status(500).json({ message: bookMassage.error.genericError });
   }
 };
+module.exports.studentList = async (req, res) => {
+  try {
+    const { page, search, limit, sort } = req.query;
+    const roleId = role.student;
+    let whereCondition = {
+      roleId,
+    };
+
+    if (search && search.trim()) {
+      whereCondition = {
+        roleId,
+        name: {
+          [Op.like]: `%${search}%`,
+        },
+      };
+    }
+    let attributes = {
+      exclude: ["password"],
+    };
+    let order = [["createdAt", "DESC"]];
+
+    if (sort) {
+      const sortParams = sort.split(",");
+      order = sortParams.map((param) => {
+        const [field, direction] = param.split(":");
+        return [field, direction === "desc" ? "DESC" : "ASC"];
+      });
+    }
+
+    const pageCount = page || pagination.pageCount;
+    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
+    const totalUser = await countUsers(whereCondition);
+    const maxPage = totalUser <= limitDoc ? 1 : Math.ceil(totalUser / limitDoc);
+
+    if (pageCount > maxPage)
+      return res
+        .status(400)
+        .json({ message: `There are only ${maxPage} page` });
+
+    const skip = parseInt((pageCount - 1) * limitDoc);
+
+    const userList = await findAllUsers(
+      whereCondition,
+      attributes,
+      skip,
+      limitDoc,
+      order
+    );
+
+    return res.status(200).json({
+      message: userMassage.success.fetch,
+      userList,
+      maxPage,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: bookMassage.error.genericError });
+  }
+};
+module.exports.facultyList = async (req, res) => {
+  try {
+    const { page, search, limit, sort } = req.query;
+
+    const roleId = role.faculty;
+    let whereCondition = {
+      roleId,
+    };
+
+    if (search && search.trim()) {
+      whereCondition = {
+        roleId,
+        name: {
+          [Op.like]: `%${search}%`,
+        },
+      };
+    }
+    let attributes = {
+      exclude: ["password"],
+    };
+    let order = [["createdAt", "DESC"]];
+
+    if (sort) {
+      const sortParams = sort.split(",");
+      order = sortParams.map((param) => {
+        const [field, direction] = param.split(":");
+        return [field, direction === "desc" ? "DESC" : "ASC"];
+      });
+    }
+
+    const pageCount = page || pagination.pageCount;
+    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
+    const totalUser = await countUsers(whereCondition);
+    const maxPage = totalUser <= limitDoc ? 1 : Math.ceil(totalUser / limitDoc);
+
+    if (pageCount > maxPage)
+      return res
+        .status(400)
+        .json({ message: `There are only ${maxPage} page` });
+
+    const skip = parseInt((pageCount - 1) * limitDoc);
+
+    
+
+    const userList = await findAllUsers(
+      whereCondition,
+      attributes,
+      skip,
+      limitDoc,
+      order
+    );
+
+    return res.status(200).json({
+      message: userMassage.success.fetch,
+      userList,
+      maxPage,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: bookMassage.error.genericError });
+  }
+};

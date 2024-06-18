@@ -65,7 +65,7 @@ module.exports = {
       userLeave: "User leave not created successfully.",
       mail: "The email was not sent successfully.",
       leaveApproval: "Leave not approved successfully",
-      leaveReject: "Leave not rejected successfully",
+      leaveReject: "Leave not rejected ",
       userLeaveRec: "User leave not recorded successfully",
     },
   },

@@ -7,7 +7,7 @@ module.exports.checkUser = async (email) => {
     if (findUserDetails) return true;
   } catch (error) {
     console.log(error);
-    throw error
+    throw error;
   }
 };
 
@@ -16,7 +16,7 @@ module.exports.deleteFile = async (file) => {
     await fs.unlinkSync(file.path);
   } catch (error) {
     console.log(error);
-    throw error
+    throw error;
   }
 };
 
@@ -26,7 +26,7 @@ module.exports.findUserByEmail = async (email) => {
     if (findUserDetails) return findUserDetails;
   } catch (error) {
     console.log(error);
-    throw error
+    throw error;
   }
 };
 
@@ -40,24 +40,36 @@ module.exports.createUser = async (data) => {
   }
 };
 
-module.exports.findUser = async (whereCondition,attributes) => {
+module.exports.findUser = async (whereCondition, attributes) => {
   try {
-    const foundUser = await user.findOne({ where: whereCondition , attributes});
+    const foundUser = await user.findOne({ where: whereCondition, attributes });
     if (!foundUser) return false;
     return foundUser;
   } catch (error) {
     console.error("Error finding user:", error);
-    throw error
+    throw error;
   }
 };
 
-module.exports.findAllUsers = async (whereCondition,attributes,offset,limit) => {
+module.exports.findAllUsers = async (
+  whereCondition,
+  attributes,
+  offset,
+  limit,
+  order
+) => {
   try {
-    const allUsers = await user.findAll({ where: whereCondition ,offset,limit, attributes});
+    const allUsers = await user.findAll({
+      where: whereCondition,
+      attributes,
+      order,
+      offset,
+      limit,
+    });
     return allUsers;
   } catch (error) {
     console.error("Error finding all users:", error);
-    throw error
+    throw error;
   }
 };
 
@@ -82,16 +94,16 @@ module.exports.deleteUser = async (whereCondition) => {
     return deletedRows;
   } catch (error) {
     console.error("Error deleting user:", error);
-    throw error
+    throw error;
   }
 };
 
-module.exports.countUsers =async (whereCondition) => {
+module.exports.countUsers = async (whereCondition) => {
   try {
     const totalUser = await user.count({ where: whereCondition });
     return totalUser;
   } catch (error) {
     console.error("Error deleting user:", error);
-    throw error
+    throw error;
   }
 };

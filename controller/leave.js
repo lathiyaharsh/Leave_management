@@ -23,7 +23,7 @@ const userLeave = require("../model/userLeave");
 
 module.exports.allLeaveStatus = async (req, res) => {
   try {
-    const { search, userRole, limit, page } = req.query;
+    const { search, userRole, limit, page, sort } = req.query;
     let whereCondition = {};
 
     if (search && search.trim()) {
@@ -51,7 +51,15 @@ module.exports.allLeaveStatus = async (req, res) => {
 
     const skip = parseInt((pageCount - 1) * limitDoc);
 
-    const order = [["createdAt", "DESC"]];
+    let order = [["createdAt", "DESC"]];
+
+    if (sort) {
+      const sortParams = sort.split(",");
+      order = sortParams.map((param) => {
+        const [field, direction] = param.split(":");
+        return [field, direction === "desc" ? "DESC" : "ASC"];
+      });
+    }
     const include = [
       {
         model: userLeave,
@@ -90,8 +98,19 @@ module.exports.allLeaveStatus = async (req, res) => {
 
 module.exports.leaveStatus = async (req, res) => {
   try {
-    const { search, userRole, limit, page } = req.query;
+    const { search, limit, page, sort } = req.query;
     const requestToId = req.user.id;
+    let whereCondition = {};
+
+    if (req.user.roleId !== 1) {
+      whereCondition = { requestToId };
+    }
+
+    if (search && search.trim()) {
+      whereCondition.status = {
+        [Op.like]: `${search}%`,
+      };
+    }
 
     const attributes = {
       include: [
@@ -101,8 +120,17 @@ module.exports.leaveStatus = async (req, res) => {
         ],
       ],
     };
-    const whereCondition = { requestToId };
-    const order = [["createdAt", "DESC"]];
+
+    let order = [["createdAt", "DESC"]];
+
+    if (sort) {
+      const sortParams = sort.split(",");
+      order = sortParams.map((param) => {
+        const [field, direction] = param.split(":");
+        return [field, direction === "desc" ? "DESC" : "ASC"];
+      });
+    }
+
     const include = [
       {
         model: userLeave,
@@ -114,22 +142,21 @@ module.exports.leaveStatus = async (req, res) => {
         attributes: ["id", "name", "email", "div", "roleId"],
       },
     ];
-    
+
     const pageCount = page || pagination.pageCount;
     const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
+    const skip = parseInt((pageCount - 1) * limitDoc);
 
     const totalLeave = await countUserLeaveRequest(whereCondition);
     const maxPage =
       totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
-    console.log(maxPage);
-    if (pageCount > maxPage)
+
+    if (pageCount > maxPage) {
       return res
         .status(400)
-        .json({ message: `There are only ${maxPage} page` });
+        .json({ message: `There are only ${maxPage} pages` });
+    }
 
-    const skip = parseInt((pageCount - 1) * limitDoc);
-
-      
     const leaveStatus = await findAllLeaveRequest(
       whereCondition,
       attributes,
@@ -138,16 +165,20 @@ module.exports.leaveStatus = async (req, res) => {
       skip,
       limitDoc
     );
-    if (!leaveStatus)
-      return res
-        .status(400)
-        .json({ message: userMassage.error.leaveRequestNotFound });
 
-    return res
-      .status(200)
-      .json({ leaveStatus, message: userMassage.success.leaveStatus ,maxPage : maxPage});
+    if (!leaveStatus || leaveStatus.length === 0) {
+      return res
+        .status(404)
+        .json({ message: userMassage.error.leaveRequestNotFound });
+    }
+
+    return res.status(200).json({
+      leaveStatus,
+      message: userMassage.success.leaveStatus,
+      maxPage: maxPage,
+    });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
@@ -157,6 +188,7 @@ module.exports.leaveApproval = async (req, res) => {
     const id = req.params.id;
     const loginUser = req.user.id;
     const checkLeaveStatus = await findLeaveRequest({ id });
+
     if (!checkLeaveStatus)
       return res
         .status(400)
@@ -258,6 +290,7 @@ module.exports.leaveReject = async (req, res) => {
       { id },
       { status: "Rejected" }
     );
+    console.log(leaveReject);
     if (!leaveReject)
       return res.status(400).json({
         message: userMassage.error.leaveReject,
@@ -385,12 +418,29 @@ module.exports.applyLeave = async (req, res) => {
 module.exports.userLeaveStatus = async (req, res) => {
   try {
     const userId = req.user.id;
+    const { search, limit, page, sort } = req.query;
 
-    const whereCondition = { userId };
+    let whereCondition = { userId };
+    if (search && search.trim()) {
+      whereCondition = {
+        userId,
+        name: {
+          [Op.like]: `%${search}%`,
+        },
+      };
+    }
     const attributes = {
       exclude: ["updatedAt"],
     };
-    const order = [["createdAt", "DESC"]];
+    let order = [["createdAt", "DESC"]];
+
+    if (sort) {
+      const sortParams = sort.split(",");
+      order = sortParams.map((param) => {
+        const [field, direction] = param.split(":");
+        return [field, direction === "desc" ? "DESC" : "ASC"];
+      });
+    }
     const include = [
       {
         model: user,
@@ -398,12 +448,26 @@ module.exports.userLeaveStatus = async (req, res) => {
         attributes: ["name", "email"],
       },
     ];
+    const pageCount = page || pagination.pageCount;
+    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
+    const skip = parseInt((pageCount - 1) * limitDoc);
 
+    const totalLeave = await countUserLeaveRequest(whereCondition);
+    const maxPage =
+      totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
+
+    if (pageCount > maxPage) {
+      return res
+        .status(400)
+        .json({ message: `There are only ${maxPage} pages` });
+    }
     const leaveStatus = await findAllLeaveRequest(
       whereCondition,
       attributes,
       order,
-      include
+      include,
+      skip,
+      limitDoc
     );
 
     return res

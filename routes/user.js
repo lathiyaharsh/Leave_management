@@ -9,7 +9,9 @@ const {
   removeUser,
   register,
   editUser,
-  editProfile
+  editProfile,
+  studentList,
+  facultyList
 } = require("../controller/user");
 
 // routes.use(verifyToken(["student","admin", "faculty"]));
@@ -17,6 +19,8 @@ const {
 routes.get("/removeUser/:id",verifyToken(["admin"]), removeUser);
 routes.get("/profile",verifyToken(["student","admin", "faculty"]), profile);
 routes.get("/userList",verifyToken(["admin", "faculty","student"]), userList);
+routes.get("/studentList",verifyToken(["admin", "faculty",]), studentList);
+routes.get("/facultyList",verifyToken(["admin",]), facultyList);
 
 routes.post("/register", uploadImgPath, register);
 routes.post("/addUser", uploadImgPath,verifyToken(["admin","faculty"]), register);

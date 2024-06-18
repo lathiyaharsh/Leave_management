@@ -369,15 +369,16 @@ module.exports.applyLeave = async (req, res) => {
     const userId = req.user.id;
     const status = "Pending";
     const { roleId } = req.user;
-
     const checkLeave = await countUserLeaveRequest({ userId, status });
-    if (checkLeave.count <= 3) {
+    
+    if (checkLeave <= 3) {
       const { startDate, endDate, leaveType, reason } = req.body;
       const requestToId = req.body?.requestToId || 2;
       const dates = {
         startDate,
         endDate,
       };
+      
       const checkDates = await validateDates(dates);
       if (!checkDates.valid) {
         return res.status(400).json({ message: checkDates.message });
@@ -391,8 +392,8 @@ module.exports.applyLeave = async (req, res) => {
         requestToId,
         roleId,
       };
-
       const createLeave = await createLeaveRequest(leaveDetails);
+      console.log(createLeave);
       if (!createLeave)
         return res
           .status(400)

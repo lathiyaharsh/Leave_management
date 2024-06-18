@@ -472,7 +472,7 @@ module.exports.userLeaveStatus = async (req, res) => {
 
     return res
       .status(200)
-      .json({ leaveStatus, message: userMassage.success.leaveStatus });
+      .json({ leaveStatus, message: userMassage.success.leaveStatus , maxPage});
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });

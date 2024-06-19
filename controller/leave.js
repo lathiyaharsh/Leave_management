@@ -222,9 +222,12 @@ module.exports.leaveApproval = async (req, res) => {
     const { startDate, endDate, userId, leaveType } = leaveDetails;
     const start = moment(startDate, "YYYY-MM-DD");
     const end = moment(endDate, "YYYY-MM-DD");
-    const leaveDays = start.isSame(end, "day")
+    let leaveDays = start.isSame(end, "day")
       ? 0.5
       : end.diff(start, "days") + 1;
+    if (leaveType != "Full day") {
+      leaveDays = leaveDays / 2;
+    }
     const leaveData = await findUserLeave({ userId });
     const availableLeave = leaveData.availableLeave - leaveDays;
     const usedLeave = Number(leaveData.usedLeave) + Number(leaveDays);
@@ -403,9 +406,20 @@ module.exports.applyLeave = async (req, res) => {
 module.exports.userLeaveStatus = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { search, limit, page, sort } = req.query;
+    const { search, limit, page, sort, year, month } = req.query;
 
     let whereCondition = { userId };
+    if (year && month) {
+      const startDate = new Date(parseInt(year), parseInt(month), 1);
+      const endDate = new Date(parseInt(year), parseInt(month) + 1, 0);
+
+      whereCondition = {
+        userId,
+        createdAt: {
+          [Op.between]: [startDate, endDate],
+        },
+      };
+    }
     if (search && search.trim()) {
       whereCondition = {
         userId,
@@ -431,6 +445,11 @@ module.exports.userLeaveStatus = async (req, res) => {
         model: user,
         as: "requestedTo",
         attributes: ["name", "email"],
+      },
+      {
+        model: user,
+        as: "requestedBy",
+        attributes: ["id", "name", "email", "div", "roleId"],
       },
     ];
     const pageCount = page || pagination.pageCount;

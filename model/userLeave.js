@@ -14,11 +14,11 @@ const userLeave = db.define("userLeave", {
     allowNull: false,
   },
   totalLeave: {
-    type: DataTypes.DECIMAL(4, 2),
+    type: DataTypes.DECIMAL(5, 2),
     allowNull: false,
   },
   availableLeave: {
-    type: DataTypes.DECIMAL(4, 2),
+    type: DataTypes.DECIMAL(5, 2),
     allowNull: false,
   },
   usedLeave: {

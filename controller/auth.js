@@ -108,7 +108,6 @@ module.exports.forgetPassword = async (req, res) => {
       return res.status(201).json({ message: userMassage.success.otp });
     }
   } catch (error) {
-    //second time
     if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(400).json({ message: userMassage.error.otpTime });
     }

@@ -98,10 +98,19 @@ module.exports.allLeaveStatus = async (req, res) => {
 
 module.exports.leaveStatus = async (req, res) => {
   try {
-    const { search, limit, page, sort } = req.query;
+    const { search, limit, page, sort , year, month } = req.query;
     const requestToId = req.user.id;
     let whereCondition = {};
+    if (year && month) {
+      const startDate = new Date(parseInt(year), parseInt(month), 1);
+      const endDate = new Date(parseInt(year), parseInt(month) + 1, 0);
 
+      whereCondition = {
+        createdAt: {
+          [Op.between]: [startDate, endDate],
+        },
+      };
+    }
     if (req.user.roleId !== 1) {
       whereCondition = { requestToId };
     }

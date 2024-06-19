@@ -326,39 +326,18 @@ module.exports.leaveReject = async (req, res) => {
 
 module.exports.leaveReport = async (req, res) => {
   try {
-    const { page, limit } = req.query;
-    const pageCount = page || pagination.pageCount;
-    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
-
-    const totalLeave = await countUserLeave();
-    const maxPage =
-      totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
-
-    if (pageCount > maxPage)
-      return res
-        .status(400)
-        .json({ message: `There are only ${maxPage} page` });
-
-    const skip = parseInt((pageCount - 1) * limitDoc);
-
     const attributes = {
       exclude: ["id", "academicYear", "createdAt", "updatedAt"],
     };
     const include = [
       {
         model: user,
-        attributes: ["name", "email", "roleId"],
+        attributes: ["name", "email"],
       },
     ];
     const order = [["usedLeave", "DESC"]];
 
-    const leaveReport = await findAllUserLeave(
-      attributes,
-      order,
-      include,
-      skip,
-      limitDoc
-    );
+    const leaveReport = await findAllUserLeave(attributes, order, include);
 
     return res
       .status(200)

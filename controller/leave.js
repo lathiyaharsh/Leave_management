@@ -310,7 +310,6 @@ module.exports.leaveReject = async (req, res) => {
       { id },
       { status: "Rejected" }
     );
-    console.log(leaveReject);
     if (!leaveReject)
       return res.status(400).json({
         message: userMassage.error.leaveReject,
@@ -392,7 +391,6 @@ module.exports.applyLeave = async (req, res) => {
         roleId,
       };
       const createLeave = await createLeaveRequest(leaveDetails);
-      console.log(createLeave);
       if (!createLeave)
         return res
           .status(400)

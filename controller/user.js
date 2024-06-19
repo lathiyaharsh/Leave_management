@@ -408,7 +408,7 @@ module.exports.userList = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: bookMassage.error.genericError });
+    return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
 module.exports.studentList = async (req, res) => {
@@ -467,7 +467,7 @@ module.exports.studentList = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: bookMassage.error.genericError });
+    return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
 module.exports.facultyList = async (req, res) => {
@@ -512,8 +512,6 @@ module.exports.facultyList = async (req, res) => {
 
     const skip = parseInt((pageCount - 1) * limitDoc);
 
-    
-
     const userList = await findAllUsers(
       whereCondition,
       attributes,
@@ -529,6 +527,6 @@ module.exports.facultyList = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ message: bookMassage.error.genericError });
+    return res.status(500).json({ message: userMassage.error.genericError });
   }
 };

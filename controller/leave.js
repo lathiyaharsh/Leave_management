@@ -141,6 +141,11 @@ module.exports.leaveStatus = async (req, res) => {
         as: "requestedBy",
         attributes: ["id", "name", "email", "div", "roleId"],
       },
+      {
+        model: user,
+        as: "requestedTo",
+        attributes: ["name", "email"],
+      },
     ];
 
     const pageCount = page || pagination.pageCount;
@@ -370,7 +375,7 @@ module.exports.applyLeave = async (req, res) => {
     const status = "Pending";
     const { roleId } = req.user;
     const checkLeave = await countUserLeaveRequest({ userId, status });
-    
+
     if (checkLeave <= 3) {
       const { startDate, endDate, leaveType, reason } = req.body;
       const requestToId = req.body?.requestToId || 2;
@@ -378,7 +383,7 @@ module.exports.applyLeave = async (req, res) => {
         startDate,
         endDate,
       };
-      
+
       const checkDates = await validateDates(dates);
       if (!checkDates.valid) {
         return res.status(400).json({ message: checkDates.message });
@@ -473,7 +478,7 @@ module.exports.userLeaveStatus = async (req, res) => {
 
     return res
       .status(200)
-      .json({ leaveStatus, message: userMassage.success.leaveStatus , maxPage});
+      .json({ leaveStatus, message: userMassage.success.leaveStatus, maxPage });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });

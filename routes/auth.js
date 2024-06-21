@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const routes = express.Router();
 const {
@@ -6,9 +7,11 @@ const {
   forgetPassword,
   verifyOtp,
   resetPassword,
+  googleLogin
 } = require("../controller/auth");
 const passport = require("passport");
 const verifyToken = require("../middleware/middleware");
+const { roleByName } = require("../config/variables");
 
 routes.get(
   "/google",
@@ -18,9 +21,7 @@ routes.get(
 routes.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/user/login" }),
-  function (req, res) {
-    res.redirect("/home");
-  }
+  googleLogin
 );
 
 routes.get("/logout", logout);

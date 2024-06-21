@@ -12,6 +12,26 @@ const {
   findOTP,
 } = require("../service/otp");
 
+module.exports.googleLogin = async (req, res) => {
+  try {
+    const jwtData = {
+      id: req.user.id,
+      name: req.user.name,
+      email: req.user.email,
+      role: roleByName[req.user.roleId],
+    };
+    const token = await jwt.sign({ data: jwtData }, process.env.SECRETKEY, {
+      expiresIn: "1d",
+    });
+    res.cookie("jwt", token, { httpOnly: true });
+
+    res.redirect("http://localhost:3000/dashboard");
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
+
 module.exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -36,7 +56,7 @@ module.exports.login = async (req, res) => {
 
       const token = isValidPassword
         ? await jwt.sign({ data: userDetails }, process.env.SECRETKEY, {
-            expiresIn: "1h",
+            expiresIn: "1d",
           })
         : null;
 
@@ -167,7 +187,7 @@ module.exports.resetPassword = async (req, res) => {
     const updateDetails = await updateUser(updatePassword, { id });
     if (!updateDetails)
       return res.status(400).json({ message: userMassage.error.update });
-    
+
     res.clearCookie("jwt");
     return res.status(200).json({ message: userMassage.success.update });
   } catch (error) {

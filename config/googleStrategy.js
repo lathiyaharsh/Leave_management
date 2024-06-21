@@ -33,11 +33,12 @@ passport.use(
             roleId: role.student,
           };
           const userData = await user.create(userDetails);
-          if (userData) {
-            return cb(null, userData);
-          } else {
+          if (!userData) {
             return cb(null, false);
           }
+         
+  
+          cb(null, { userData });
         }
       } catch (error) {
         console.log(error);

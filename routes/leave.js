@@ -9,13 +9,10 @@ const {
   applyLeave,
   userLeaveStatus,
   leaveBalance,
-  allLeaveStatus
 } = require("../controller/leave");
-
 
 routes.get("/leaveReport",verifyToken(["admin"]), leaveReport);
 routes.get("/leaveStatus",verifyToken(["admin", "faculty"]), leaveStatus);
-routes.get("/allLeaveStatus",verifyToken(["admin", "faculty"]), allLeaveStatus);
 routes.get("/leaveApproval/:id",verifyToken(["admin", "faculty"]), leaveApproval);
 routes.get("/leaveReject/:id",verifyToken(["admin", "faculty"]), leaveReject);
 routes.get("/userLeaveStatus",verifyToken(["admin", "faculty","student"]), userLeaveStatus);//own leave status

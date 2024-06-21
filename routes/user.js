@@ -3,7 +3,6 @@ const routes = express.Router();
 const verifyToken = require("../middleware/middleware");
 const { uploadImgPath } = require("../model/user");
 const {
-  getRole,
   profile,
   userList,
   removeUser,

@@ -24,11 +24,10 @@ routes.get(
 );
 
 routes.get("/logout", logout);
-routes.post("/login", login);
 
+routes.post("/login", login);
 routes.post("/forgetPassword", forgetPassword);
 routes.post("/verifyOtp", verifyOtp);
-
 routes.post(
   "/resetPassword",
   verifyToken(["admin", "faculty", "student"]),

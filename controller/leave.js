@@ -1,7 +1,7 @@
 require("dotenv").config();
 const { Op, Sequelize } = require("sequelize");
 const { userMassage } = require("../config/message");
-const { role, pagination } = require("../config/variables");
+const { pagination } = require("../config/variables");
 const sendLeaveUpdate = require("../utility/sendLeaveUpdate");
 const moment = require("moment");
 const validateDates = require("../utility/validateDates");
@@ -14,94 +14,18 @@ const {
 } = require("../service/leaveRequest");
 const {
   findUserLeave,
-  countUserLeave,
   findAllUserLeave,
   updateUserLeave,
 } = require("../service/userLeave");
 const { user } = require("../model/user");
 const userLeave = require("../model/userLeave");
 
-module.exports.allLeaveStatus = async (req, res) => {
-  try {
-    const { search, userRole, limit, page, sort } = req.query;
-    let whereCondition = {};
-
-    if (search && search.trim()) {
-      whereCondition.status = {
-        [Op.like]: `${search}%`,
-      };
-    }
-
-    if (userRole) {
-      const findRole = role[userRole];
-      whereCondition.roleId = findRole;
-    }
-
-    const pageCount = page || pagination.pageCount;
-    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
-
-    const totalLeave = await countUserLeaveRequest(whereCondition);
-    const maxPage =
-      totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
-
-    if (pageCount > maxPage)
-      return res
-        .status(400)
-        .json({ message: `There are only ${maxPage} page` });
-
-    const skip = parseInt((pageCount - 1) * limitDoc);
-
-    let order = [["createdAt", "DESC"]];
-
-    if (sort) {
-      const sortParams = sort.split(",");
-      order = sortParams.map((param) => {
-        const [field, direction] = param.split(":");
-        return [field, direction === "desc" ? "DESC" : "ASC"];
-      });
-    }
-    const include = [
-      {
-        model: userLeave,
-        attributes: ["usedLeave", "availableLeave"],
-      },
-      {
-        model: user,
-        as: "requestedBy",
-        attributes: ["id", "name", "email", "roleId"],
-      },
-      {
-        model: user,
-        as: "requestedTo",
-        attributes: ["id", "name", "email", "roleId"],
-      },
-    ];
-    const attributes = {};
-    const searchResults = await findAllLeaveRequest(
-      whereCondition,
-      attributes,
-      order,
-      include,
-      skip,
-      limitDoc
-    );
-
-    return res.status(200).json({
-      message: userMassage.success.studentList,
-      searchResults,
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: userMassage.error.genericError });
-  }
-};
-
 module.exports.leaveStatus = async (req, res) => {
   try {
     const { search, limit, page, sort, year, month } = req.query;
     const requestToId = req.user.id;
     let whereCondition = {};
-    
+
     if (req.user.roleId !== 1) {
       whereCondition = { requestToId };
     }
@@ -114,7 +38,7 @@ module.exports.leaveStatus = async (req, res) => {
           [Op.between]: [startDate, endDate],
         },
         status: {
-          [Op.or]: ["Pending","Approved"],
+          [Op.or]: ["Pending", "Approved"],
         },
       };
     }
@@ -401,7 +325,7 @@ module.exports.applyLeave = async (req, res) => {
         .json({ message: userMassage.success.leaveRequest });
     }
     return res
-      .status(201)
+      .status(400)
       .json({ message: userMassage.error.leaveRequestLimit });
   } catch (error) {
     if (error.name === "SequelizeValidationError") {

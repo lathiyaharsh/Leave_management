@@ -33,6 +33,7 @@ module.exports.profile = async (req, res) => {
       department,
       address,
       div,
+      grNumber,
     } = req.user;
     const userDetails = {
       name,
@@ -43,6 +44,7 @@ module.exports.profile = async (req, res) => {
       department,
       address,
       div,
+      grNumber,
       user: roleByName[roleId],
     };
 
@@ -411,6 +413,7 @@ module.exports.userList = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
+
 module.exports.studentList = async (req, res) => {
   try {
     const { page, search, limit, sort } = req.query;
@@ -470,6 +473,7 @@ module.exports.studentList = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
+
 module.exports.facultyList = async (req, res) => {
   try {
     const { page, search, limit, sort } = req.query;

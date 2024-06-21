@@ -11,12 +11,12 @@ passport.use(
     {
       clientID: process.env.clientID,
       clientSecret: process.env.clientSecret,
-      callbackURL: "/google/callback",
+      callbackURL: "/api/v1/auth/google/callback",
     },
     async function (accessToken, refreshToken, profile, cb) {
       try {
-        const email = profile.emails[0].value
-        const checkEmail = await findUser({email })
+        const email = profile.emails[0].value;
+        const checkEmail = await findUser({ email });
         if (checkEmail) {
           cb(null, checkEmail);
         } else {

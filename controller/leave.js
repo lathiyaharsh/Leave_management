@@ -63,7 +63,8 @@ module.exports.leaveStatus = async (req, res) => {
       const sortParams = sort.split(",");
       order = sortParams.map((param) => {
         const [field, direction] = param.split(":");
-        return [field, direction === "desc" ? "DESC" : "ASC"];
+        const nestedFields = field.split(".");
+        return [...nestedFields, direction === "desc" ? "DESC" : "ASC"];
       });
     }
 
@@ -371,7 +372,8 @@ module.exports.userLeaveStatus = async (req, res) => {
       const sortParams = sort.split(",");
       order = sortParams.map((param) => {
         const [field, direction] = param.split(":");
-        return [field, direction === "desc" ? "DESC" : "ASC"];
+        const nestedFields = field.split(".");
+        return [...nestedFields, direction === "desc" ? "DESC" : "ASC"];
       });
     }
     const include = [

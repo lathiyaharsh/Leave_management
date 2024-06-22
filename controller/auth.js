@@ -61,7 +61,7 @@ module.exports.login = async (req, res) => {
         : null;
 
       if (isValidPassword) {
-        res.cookie("jwt", token, { httpOnly: true });
+        res.cookie("jwt", token);
         return res.status(200).json({
           message: userMassage.success.loginSuccess,
           token,

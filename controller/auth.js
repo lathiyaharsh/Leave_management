@@ -23,7 +23,8 @@ module.exports.googleLogin = async (req, res) => {
     const token = await jwt.sign({ data: jwtData }, process.env.SECRETKEY, {
       expiresIn: "1d",
     });
-    res.cookie("jwt", token, { httpOnly: true });
+    res.cookie("jwt", token, {  sameSite: "none",
+    secure: true,httpOnly: true });
 
     res.redirect("http://localhost:3000/dashboard");
   } catch (error) {
@@ -61,7 +62,8 @@ module.exports.login = async (req, res) => {
         : null;
 
       if (isValidPassword) {
-        res.cookie("jwt", token);
+        res.cookie("jwt", token, {  sameSite: "none",
+          secure: true, httpOnly: true });
         return res.status(200).json({
           message: userMassage.success.loginSuccess,
           token,

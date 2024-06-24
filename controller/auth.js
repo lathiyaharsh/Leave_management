@@ -65,6 +65,7 @@ module.exports.login = async (req, res) => {
         res.cookie("jwt", token, {  sameSite: "none",
           secure: true ,httpOnly: true, 
       path: "/",});
+      res.redirect(`http://localhost:3000/dashboard?token=${token}`);
         return res.status(200).json({
           message: userMassage.success.loginSuccess,
           token,

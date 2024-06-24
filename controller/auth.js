@@ -80,7 +80,10 @@ module.exports.login = async (req, res) => {
 
 module.exports.logout = async (req, res) => {
   try {
-    res.clearCookie("jwt");
+    res.clearCookie("jwt", {
+      sameSite: "none",
+      secure: true,
+    });
     return res.status(200).json({
       message: userMassage.success.logout,
     });

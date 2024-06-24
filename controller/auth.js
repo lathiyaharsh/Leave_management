@@ -24,7 +24,7 @@ module.exports.googleLogin = async (req, res) => {
       expiresIn: "1d",
     });
     res.cookie("jwt", token, {  sameSite: "none",
-    secure: true,httpOnly: true });
+    secure: true,httpOnly: true, path: "/" });
 
     res.redirect(`http://localhost:3000/dashboard?token=${token}`);
   } catch (error) {
@@ -63,7 +63,8 @@ module.exports.login = async (req, res) => {
 
       if (isValidPassword) {
         res.cookie("jwt", token, {  sameSite: "none",
-          secure: true});
+          secure: true ,httpOnly: true, 
+      path: "/",});
         return res.status(200).json({
           message: userMassage.success.loginSuccess,
           token,
@@ -83,6 +84,8 @@ module.exports.logout = async (req, res) => {
     res.clearCookie("jwt", {
       sameSite: "none",
       secure: true,
+      httpOnly: true, 
+      path: "/",
     });
     return res.status(200).json({
       message: userMassage.success.logout,

@@ -11,13 +11,13 @@ const {
   leaveBalance,
 } = require("../controller/leave");
 
+routes.get("/",verifyToken(["admin", "faculty"]), leaveStatus);
 routes.get("/leaveReport",verifyToken(["admin"]), leaveReport);
-routes.get("/leaveStatus",verifyToken(["admin", "faculty"]), leaveStatus);
 routes.get("/leaveApproval/:id",verifyToken(["admin", "faculty"]), leaveApproval);
 routes.get("/leaveReject/:id",verifyToken(["admin", "faculty"]), leaveReject);
-routes.get("/userLeaveStatus",verifyToken(["admin", "faculty","student"]), userLeaveStatus);//own leave status
+routes.get("/userLeaveStatus",verifyToken(["student"]), userLeaveStatus);//own leave status
 routes.get("/leaveBalance",verifyToken(["admin", "faculty","student"]), leaveBalance);
 
-routes.post("/applyLeave",verifyToken(["student"]), applyLeave);
+routes.post("/",verifyToken(["student"]), applyLeave);
 
 module.exports = routes;

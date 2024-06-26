@@ -20,110 +20,7 @@ const {
 const { user } = require("../model/user");
 const userLeave = require("../model/userLeave");
 
-module.exports.leaveStatus = async (req, res) => {
-  try {
-    const { search, limit, page, sort, year, month } = req.query;
-    const requestToId = req.user.id;
-    let whereCondition = {};
 
-    if (req.user.roleId !== 1) {
-      whereCondition = { requestToId };
-    }
-    if (year && month) {
-      const startDate = new Date(parseInt(year), parseInt(month), 1);
-      const endDate = new Date(parseInt(year), parseInt(month) + 1, 0);
-
-      whereCondition = {
-        startDate: {
-          [Op.between]: [startDate, endDate],
-        },
-        status: {
-          [Op.or]: ["Pending", "Approved"],
-        },
-      };
-    }
-    if (search && search.trim()) {
-      whereCondition.status = {
-        [Op.like]: `${search}%`,
-      };
-    }
-
-    const attributes = {
-      include: [
-        [
-          Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`),
-          "leaveDifference",
-        ],
-      ],
-    };
-
-    let order = [["createdAt", "DESC"]];
-
-    if (sort) {
-      const sortParams = sort.split(",");
-      order = sortParams.map((param) => {
-        const [field, direction] = param.split(":");
-        const nestedFields = field.split(".");
-        return [...nestedFields, direction === "desc" ? "DESC" : "ASC"];
-      });
-    }
-
-    const include = [
-      {
-        model: userLeave,
-        attributes: ["usedLeave", "availableLeave"],
-      },
-      {
-        model: user,
-        as: "requestedBy",
-        attributes: ["id", "name", "email", "div", "roleId"],
-      },
-      {
-        model: user,
-        as: "requestedTo",
-        attributes: ["name", "email"],
-      },
-    ];
-
-    const pageCount = page || pagination.pageCount;
-    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
-    const skip = parseInt((pageCount - 1) * limitDoc);
-
-    const totalLeave = await countUserLeaveRequest(whereCondition);
-    const maxPage =
-      totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
-
-    if (pageCount > maxPage) {
-      return res
-        .status(400)
-        .json({ message: `There are only ${maxPage} pages` });
-    }
-
-    const leaveStatus = await findAllLeaveRequest(
-      whereCondition,
-      attributes,
-      order,
-      include,
-      skip,
-      limitDoc
-    );
-
-    if (!leaveStatus || leaveStatus.length === 0) {
-      return res
-        .status(404)
-        .json({ message: userMassage.error.leaveRequestNotFound });
-    }
-
-    return res.status(200).json({
-      leaveStatus,
-      message: userMassage.success.leaveStatus,
-      maxPage: maxPage,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: userMassage.error.genericError });
-  }
-};
 
 module.exports.leaveApproval = async (req, res) => {
   try {
@@ -277,7 +174,11 @@ module.exports.leaveReport = async (req, res) => {
     const order = [["usedLeave", "DESC"]];
 
     const leaveReport = await findAllUserLeave(attributes, order, include);
-
+    leaveReport.forEach(report => {
+      if (parseFloat(report.availableLeave) < 0) {
+        report.availableLeave = "0.00";
+      }
+    });
     return res
       .status(200)
       .json({ leaveReport, message: userMassage.success.leaveReport });
@@ -286,6 +187,7 @@ module.exports.leaveReport = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
+
 
 module.exports.applyLeave = async (req, res) => {
   try {
@@ -337,7 +239,104 @@ module.exports.applyLeave = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
+module.exports.leaveStatus = async (req, res) => {
+  try {
+    const { search, limit, page, sort, year, month } = req.query;
+    const requestToId = req.user.id;
+    let whereCondition = {};
 
+    if (req.user.roleId !== 1) {
+      whereCondition = { requestToId };
+    }
+    if (year && month) {
+      const startDate = new Date(parseInt(year), parseInt(month), 1);
+      const endDate = new Date(parseInt(year), parseInt(month) + 1, 0);
+
+      whereCondition = {
+        startDate: {
+          [Op.between]: [startDate, endDate],
+        },
+        status: {
+          [Op.or]: ["Pending", "Approved"],
+        },
+      };
+    }
+
+    const attributes = {
+      include: [
+        [
+          Sequelize.literal(`DATEDIFF(endDate, startDate) + 1`),
+          "leaveDifference",
+        ],
+      ],
+    };
+
+    let order = [["createdAt", "DESC"]];
+
+    if (sort) {
+      const sortParams = sort.split(",");
+      order = sortParams.map((param) => {
+        const [field, direction] = param.split(":");
+        const nestedFields = field.split(".");
+        return [...nestedFields, direction === "desc" ? "DESC" : "ASC"];
+      });
+    }
+    const include = [
+      {
+        model: userLeave,
+        attributes: ["usedLeave", "availableLeave"],
+      },
+      {
+        model: user,
+        as: "requestedBy",
+        attributes: ["id", "name", "email", "div", "roleId"],
+        where: search && search.trim() ? { name: { [Op.like]: `${search}%` } } : {}
+      },
+      {
+        model: user,
+        as: "requestedTo",
+        attributes: ["name", "email"],
+      },
+    ];
+
+    const pageCount = page || pagination.pageCount;
+    const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
+    const skip = parseInt((pageCount - 1) * limitDoc);
+
+    const totalLeave = await countUserLeaveRequest(whereCondition);
+    const maxPage =
+      totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
+
+    if (pageCount > maxPage) {
+      return res
+        .status(400)
+        .json({ message: `There are only ${maxPage} pages` });
+    }
+
+    const leaveStatus = await findAllLeaveRequest(
+      whereCondition,
+      attributes,
+      order,
+      include,
+      skip,
+      limitDoc
+    );
+    leaveStatus.forEach(report => {
+      if (parseFloat(report?.userLeave?.availableLeave) < 0) {
+        report.userLeave.availableLeave = "0.00";
+      }
+    });
+
+    return res.status(200).json({
+      leaveStatus,
+      message: userMassage.success.leaveStatus,
+      maxPage: maxPage,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: userMassage.error.genericError });
+  }
+};
 module.exports.userLeaveStatus = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -347,12 +346,12 @@ module.exports.userLeaveStatus = async (req, res) => {
     if (year && month) {
       const startDate = new Date(parseInt(year), parseInt(month), 1);
       const endDate = new Date(parseInt(year), parseInt(month) + 1, 0);
-
+      
       whereCondition = {
         userId,
-        createdAt: {
-          [Op.between]: [startDate, endDate],
-        },
+        startDate: {
+        [Op.between]: [startDate, endDate],
+      },
       };
     }
     if (search && search.trim()) {

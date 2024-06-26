@@ -7,7 +7,7 @@ const {
   forgetPassword,
   verifyOtp,
   resetPassword,
-  googleLogin
+  googleLogin,
 } = require("../controller/auth");
 const passport = require("passport");
 const verifyToken = require("../middleware/middleware");
@@ -20,13 +20,13 @@ routes.get(
 
 routes.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/user/login" }),
+  passport.authenticate("google", { failureRedirect: "/" }),
   googleLogin
 );
 
-routes.get("/logout", logout);
+routes.get("/", logout);
 
-routes.post("/login", login);
+routes.post("/", login);
 routes.post("/forgetPassword", forgetPassword);
 routes.post("/verifyOtp", verifyOtp);
 routes.post(

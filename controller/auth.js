@@ -25,8 +25,8 @@ module.exports.googleLogin = async (req, res) => {
     });
     res.cookie("jwt", token, {  sameSite: "none",
     secure: true,httpOnly: true, path: "/" });
-
-    res.redirect(`http://localhost:3000/dashboard?token=${token}`);
+    const url = process.env.FE;  
+    res.redirect(`${url}?token=${token}`);
   } catch (error) {
     console.log(error);
     return res.status(500).json({ message: userMassage.error.genericError });

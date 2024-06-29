@@ -20,8 +20,6 @@ const {
 const { user } = require("../model/user");
 const userLeave = require("../model/userLeave");
 
-
-
 module.exports.leaveApproval = async (req, res) => {
   try {
     const id = req.params.id;
@@ -56,11 +54,14 @@ module.exports.leaveApproval = async (req, res) => {
     const { startDate, endDate, userId, leaveType } = leaveDetails;
     const start = moment(startDate, "YYYY-MM-DD");
     const end = moment(endDate, "YYYY-MM-DD");
-    let leaveDays = start.isSame(end, "day")
-      ? 0.5
-      : end.diff(start, "days") + 1;
+    let leaveDays = start.isSame(end, "day") ? 1 : end.diff(start, "days") + 1;
+    
     if (leaveType != "Full day") {
-      leaveDays = leaveDays / 2;
+      if (start.isSame(end, "day")) {
+        leaveDays = 0.5;
+      } else {
+        leaveDays = (end.diff(start, "days") + 1) / 2;
+      }
     }
     const leaveData = await findUserLeave({ userId });
     const availableLeave = leaveData.availableLeave - leaveDays;
@@ -174,7 +175,7 @@ module.exports.leaveReport = async (req, res) => {
     const order = [["usedLeave", "DESC"]];
 
     const leaveReport = await findAllUserLeave(attributes, order, include);
-    leaveReport.forEach(report => {
+    leaveReport.forEach((report) => {
       if (parseFloat(report.availableLeave) < 0) {
         report.availableLeave = "0.00";
       }
@@ -187,7 +188,6 @@ module.exports.leaveReport = async (req, res) => {
     return res.status(500).json({ message: userMassage.error.genericError });
   }
 };
-
 
 module.exports.applyLeave = async (req, res) => {
   try {
@@ -290,7 +290,8 @@ module.exports.leaveStatus = async (req, res) => {
         model: user,
         as: "requestedBy",
         attributes: ["id", "name", "email", "div", "roleId"],
-        where: search && search.trim() ? { name: { [Op.like]: `${search}%` } } : {}
+        where:
+          search && search.trim() ? { name: { [Op.like]: `${search}%` } } : {},
       },
       {
         model: user,
@@ -303,7 +304,14 @@ module.exports.leaveStatus = async (req, res) => {
     const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
     const skip = parseInt((pageCount - 1) * limitDoc);
 
-    const totalLeave = await countUserLeaveRequest(whereCondition);
+    const totalLeave = await countUserLeaveRequest(
+      whereCondition,
+      attributes,
+      order,
+      include,
+      skip,
+      limitDoc
+    );
     const maxPage =
       totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
 
@@ -321,7 +329,7 @@ module.exports.leaveStatus = async (req, res) => {
       skip,
       limitDoc
     );
-    leaveStatus.forEach(report => {
+    leaveStatus.forEach((report) => {
       if (parseFloat(report?.userLeave?.availableLeave) < 0) {
         report.userLeave.availableLeave = "0.00";
       }
@@ -346,12 +354,12 @@ module.exports.userLeaveStatus = async (req, res) => {
     if (year && month) {
       const startDate = new Date(parseInt(year), parseInt(month), 1);
       const endDate = new Date(parseInt(year), parseInt(month) + 1, 0);
-      
+
       whereCondition = {
         userId,
         startDate: {
-        [Op.between]: [startDate, endDate],
-      },
+          [Op.between]: [startDate, endDate],
+        },
       };
     }
     if (search && search.trim()) {
@@ -391,7 +399,14 @@ module.exports.userLeaveStatus = async (req, res) => {
     const limitDoc = parseInt(limit) || parseInt(pagination.limitDoc);
     const skip = parseInt((pageCount - 1) * limitDoc);
 
-    const totalLeave = await countUserLeaveRequest(whereCondition);
+    const totalLeave = await countUserLeaveRequest(
+      whereCondition,
+      attributes,
+      order,
+      include,
+      skip,
+      limitDoc
+    );
     const maxPage =
       totalLeave <= limitDoc ? 1 : Math.ceil(totalLeave / limitDoc);
 

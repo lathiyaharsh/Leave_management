@@ -9,10 +9,9 @@ const verifyToken = (role) => {
   return async (req, res, next) => {
     //const token = req.cookies["jwt"];
     const authorizationHeader = req.headers["authorization"];
-    if (!authorizationHeader || !authorizationHeader.startsWith("Bearer "))
-      return res.status(403).json({ message: userMassage.error.tokenMissing });
-
-    const token = authorizationHeader.split(" ")[1];
+   
+    const token = authorizationHeader?.split(" ")[1] || req.cookies["jwt"];
+    
     if (!token)
       return res.status(403).json({ message: userMassage.error.tokenMissing });
 

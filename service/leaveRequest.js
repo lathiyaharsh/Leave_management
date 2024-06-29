@@ -56,11 +56,15 @@ module.exports.findAllLeaveRequest = async (whereCondition,attributes,order,incl
   }
 };
 
-module.exports.countUserLeaveRequest = async (whereCondition) => {
+module.exports.countUserLeaveRequest = async (whereCondition,attributes,order,include,offset,limit) => {
   try {
-    
     const foundUserLeave = await leaveRequest.findAndCountAll({
       where: whereCondition,
+      attributes,
+      order,
+      include,
+      offset,
+      limit
     });
     if (!foundUserLeave) return false;
     return foundUserLeave.count;
